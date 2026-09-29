@@ -1,0 +1,6 @@
+{
+  "name": "HOLM Power Flow Card",
+  "render_readme": true,
+  "filename": "holm-power-flow-card.js",
+  "homeassistant": "2025.1.0"
+}
