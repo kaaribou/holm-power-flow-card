@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+- **Totaux du jour** (#1) sous les nœuds : acheté / revendu au réseau, produit, consommé (statistiques du tableau Énergie, option `show_totals`).
+- **Graphiques au toucher** (#2) : un toucher sur Solaire, Maison, Réseau ou un appareil ouvre son graphique de puissance (6 h, 24 h, 48 h, 7 j ou dates au choix), avec min / max / moyenne et énergie de la période ; revente affichée sous l'axe pour le réseau.
+
 ## 1.0.0
 Première version publique.
 

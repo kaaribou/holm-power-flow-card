@@ -18,7 +18,8 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 - ↑ **Revente** : mesurée si vous avez un capteur, sinon **estimée** à partir de l'énergie revendue (signalée par ≈).
 - 💶 **Heures creuses / pleines** : le réseau change de couleur selon le tarif en cours, avec le prix du kWh.
 - 🔌 **Appareils actifs** : les appareils du tableau Énergie qui consomment, triés par puissance, avec une icône choisie automatiquement (lave-linge, four, chauffe-eau, TV, clim…).
-- 👆 **Cliquable** : un toucher sur un nœud ou un appareil ouvre son historique.
+- 🧮 **Totaux du jour** sous les nœuds : kWh achetés ↓ et revendus ↑ au réseau, produits par le solaire, consommés par la maison.
+- 📈 **Graphiques au toucher** : un toucher sur un nœud ou un appareil ouvre son graphique de puissance (6 h, 24 h, 48 h, 7 j ou dates au choix).
 - 🎨 Couleurs personnalisables, cadre de carte facultatif, courbure des liaisons réglable.
 
 | En plein soleil (revente) | Soleil + réseau en heures creuses | Le soir, heures pleines |
@@ -26,6 +27,21 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 | ![Soleil](docs/images/soleil.png) | ![Mixte](docs/images/mixte.png) | ![Soir](docs/images/soir.png) |
 
 ---
+
+### 🆕 Nouveautés de la 1.1.0
+
+#### 🧮 Les totaux du jour, en plus du temps réel
+
+La puissance en direct reste la valeur principale ; juste en dessous, chaque nœud affiche maintenant son **total depuis minuit** : **↓ acheté** et **↑ revendu** pour le réseau, **produit** pour le solaire, **consommé** pour la maison. Les totaux viennent des statistiques du tableau Énergie et se mettent à jour toutes les 5 minutes (option `show_totals` pour les masquer).
+
+#### 📈 Un graphique pour chaque nœud et chaque appareil
+
+Un toucher sur **Solaire**, **Maison**, **Réseau** ou un **appareil actif** ouvre un panneau graphique :
+
+- périodes **6 h · 24 h · 48 h · 7 j** ou **dates au choix** ;
+- courbe de puissance, avec la **revente sous l'axe** (dans sa couleur) pour le réseau ;
+- chiffres clés : **actuel**, **min / max** (ou pic d'achat / pic de revente), **moyenne**, et l'**énergie** de la période (**acheté / revendu** pour le réseau) ;
+- survol (ou toucher) de la courbe pour lire une valeur ; bouton ⓘ pour la fenêtre d'informations de Home Assistant.
 
 ## Prérequis
 
@@ -77,6 +93,7 @@ type: custom:holm-power-flow-card
 |---|---|---|
 | `title` | Titre au-dessus du flux | — |
 | `show_frame` | Afficher le cadre de la carte | `true` |
+| `show_totals` | Totaux du jour sous les nœuds (acheté / revendu, produit, consommé) | `true` |
 | `threshold` | En dessous de ce seuil (W), une liaison est considérée inactive | `20` |
 | `curve_factor` | Courbure des liaisons (0 = droites) | `1` |
 | `solar_power` / `grid_power` | Capteurs de puissance (W ou kW) | tableau Énergie |
@@ -128,4 +145,6 @@ La carte vous plaît ? Vous pouvez m'offrir une bière 🍺
 
 Code : licence **MIT** — © kaaribou. Voir le [CHANGELOG](CHANGELOG.md).
 
-Fait partie de la collection **HOLM** : [Carburant HOLM](https://github.com/kaaribou/carburant-holm) · [HOLM Navbar Card](https://github.com/kaaribou/holm-navbar-card) · [HOLM Music Card](https://github.com/kaaribou/holm-music-card) · [HOLM Sentinel Card](https://github.com/kaaribou/holm-sentinel-card).
+Fait partie de **HOLM — Home Orchestration & Living Management** : la gestion et l'orchestration intelligente de la maison.
+
+Les autres projets : [Volets HOLM](https://github.com/kaaribou/volets-holm) · [Climat HOLM](https://github.com/kaaribou/climat-holm) · [Carburant HOLM](https://github.com/kaaribou/carburant-holm) · [Commandes à la maison HOLM](https://github.com/kaaribou/commandes-holm) · [HOLM Navbar Card](https://github.com/kaaribou/holm-navbar-card) · [HOLM Climate Card](https://github.com/kaaribou/climate-card-holm) · [HOLM Music Card](https://github.com/kaaribou/holm-music-card) · [HOLM Sentinel Card](https://github.com/kaaribou/holm-sentinel-card) · [HOLM Security Card](https://github.com/kaaribou/holm-security-card) · [HOLM Recordings Card](https://github.com/kaaribou/holm-recordings-card) · [HOLM Covers Card](https://github.com/kaaribou/holm-covers-card) · [HOLM Energy Cards](https://github.com/kaaribou/holm-energy-cards) · [HOLM Radiator Card](https://github.com/kaaribou/holm-radiator-card) · [HOLM Floor Card](https://github.com/kaaribou/holm-floor-card) · [HOLM Smoke Card](https://github.com/kaaribou/holm-smoke-card) · [HOLM BG Card](https://github.com/kaaribou/holm-bg-card).
