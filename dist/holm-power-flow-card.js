@@ -3,7 +3,9 @@
  *   type: custom:holm-power-flow-card
  *   solar_power / grid_power (W, négatif = injection accepté) / export_power / home_power / export_energy
  *   solar_label / home_label / grid_label : entité affichée sous chaque nœud
- *   tariff_entity + hc_price (nombre ou entité) : couleur du réseau en heures creuses / pleines
+ *   HOLM HP/HC détecté automatiquement (binary_sensor.heures_creuses) : période HC / HP, tarif en cours, décompte
+ *   tariff_display: color | label | both, show_countdown, hc_entity (sinon trouvé automatiquement)
+ *   tariff_entity + hc_price (nombre ou entité) : ancienne méthode, prioritaire si configurée
  *   threshold, curve_factor, show_frame, show_devices, show_device_names, max_devices, device_threshold, devices
  *   show_totals : totaux du jour sous les icônes (acheté / revendu, produit, consommé)
  *   Un toucher sur une icône ou un appareil ouvre son graphique (6 h, 24 h, 48 h, 7 j ou dates au choix)
@@ -11,7 +13,7 @@
  * https://github.com/kaaribou/holm-power-flow-card — licence MIT
  */
 (() => {
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 // ---- holm-energy-chart : panneau graphique partagé (HOLM Power Flow Card / HOLM Energy Cards) ----
 // open(hass, {
 //   name, subtitle, color, icon, entity (pour « Détails »),
@@ -476,19 +478,47 @@ class HolmPowerFlowCard extends HTMLElement {
     const share = home > 0 ? Math.min(1, selfUse / home) : solar > 0 ? 1 : 0;
     return { solar, imp, exp, home, selfUse, share, est, th };
   }
+  // ---- HOLM HP/HC : binary_sensor des heures creuses (attributs prochaine_bascule, tarif) ----
+  _hcEnt() {
+    const h = this._hass, ok = (id) => { const st = id && h.states[id]; return !!st && st.attributes.prochaine_bascule !== undefined; };
+    if (this._c.hc_entity) return ok(this._c.hc_entity) ? this._c.hc_entity : null;
+    if (ok(this._hcAuto)) return this._hcAuto;
+    this._hcAuto = ok("binary_sensor.heures_creuses") ? "binary_sensor.heures_creuses"
+      : Object.keys(h.states).find((k) => k.startsWith("binary_sensor.") && h.states[k].attributes.prochaine_bascule !== undefined && h.states[k].attributes.prochaine_periode !== undefined) || null;
+    return this._hcAuto;
+  }
+  // { isHC, price, next } : ancienne méthode (tariff_entity + hc_price) si configurée, sinon HOLM HP/HC
+  _tariff() {
+    const c = this._c, hc = this._hcEnt(), hs = hc ? this._hass.states[hc] : null;
+    const next = hs && hs.attributes.prochaine_bascule ? new Date(hs.attributes.prochaine_bascule) : null;
+    const nx = next && !isNaN(next) ? next : null;
+    if (this._ent("tariff")) {
+      const t = this._ent("tariff"), v = parseFloat(this._hass.states[t]?.state);
+      const hp = typeof c.hc_price === "string" && c.hc_price.includes(".") && isNaN(Number(c.hc_price)) ? this._n(c.hc_price) : Number(c.hc_price);
+      if (isNaN(v)) return null;
+      return { isHC: !isNaN(hp) && Math.abs(v - hp) < 1e-6, price: v, next: nx };
+    }
+    if (!hs || !["on", "off"].includes(hs.state)) return null;
+    let price = parseFloat(hs.attributes.tarif);
+    if (isNaN(price)) price = parseFloat(this._hass.states["sensor.tarif_actuel"]?.state);
+    return { isHC: hs.state === "on", price, next: nx };
+  }
+  _countdown(t) {
+    if (!t || !t.next || this._c.show_countdown === false) return "";
+    const now = new Date(), min = Math.max(0, Math.round((t.next - now) / 60000));
+    const dur = min >= 60 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")}` : `${min} min`;
+    return `${t.isHC ? "HP" : "HC"} dans ${dur}`;
+  }
   _gridColor() {
-    const c = this._c, t = this._ent("tariff");
-    if (!t) return c.grid_color || DEF.grid_color;
-    // hc_price : un prix (0.1589) ou une entité qui contient le prix des heures creuses
-    const v = parseFloat(this._hass.states[t]?.state);
-    const hc = typeof c.hc_price === "string" && c.hc_price.includes(".") && isNaN(Number(c.hc_price)) ? this._n(c.hc_price) : Number(c.hc_price);
-    const isHC = !isNaN(v) && !isNaN(hc) && Math.abs(v - hc) < 1e-6;
-    this._isHC = isHC;
-    return isHC ? c.grid_color || DEF.grid_color : c.grid_hp_color || DEF.grid_hp_color;
+    const c = this._c, t = this._tariff();
+    this._tar = t;
+    if (!t || c.tariff_display === "label") { this._isHC = t ? t.isHC : false; return c.grid_color || DEF.grid_color; }
+    this._isHC = t.isHC;
+    return t.isHC ? c.grid_color || DEF.grid_color : c.grid_hp_color || DEF.grid_hp_color;
   }
   _build() {
     if (!this.shadowRoot || !this._c || !this._src) return;
-    const c = this._c, W = Math.max(260, (this._w || this.clientWidth || 400) - 24), H = c.show_totals !== false ? 112 : 96, cy = 30, r = 22;
+    const c = this._c, W = Math.max(260, (this._w || this.clientWidth || 400) - 24), H = (c.show_totals !== false ? 112 : 96) + (c.show_countdown !== false && (this._ent("tariff") || (this._hass && this._hcEnt())) ? 13 : 0), cy = 30, r = 22;
     const xs = Math.round(W * 0.14), xh = Math.round(W * 0.5), xg = Math.round(W * 0.86);
     const col = { s: c.solar_color || DEF.solar_color, h: c.home_color || DEF.home_color, e: c.export_color || DEF.export_color };
     const cf = c.curve_factor !== undefined ? Number(c.curve_factor) : 1;
@@ -529,6 +559,9 @@ class HolmPowerFlowCard extends HTMLElement {
       .k { font-size:11px; font-weight:600; color:var(--primary-text-color); opacity:.85; white-space:nowrap; font-variant-numeric:tabular-nums; line-height:1.3; }
       .k .in { color:var(--gc); } .k .out { color:${c.export_color || DEF.export_color}; }
       .k:empty { display:none; }
+      .node.grid { width:${Math.min(144, Math.round(W * 0.29))}px; }
+      .cd { font-size:10.5px; font-weight:600; white-space:nowrap; line-height:1.3; font-variant-numeric:tabular-nums; color:color-mix(in srgb, var(--cdc, var(--secondary-text-color)) 85%, var(--primary-text-color)); }
+      .cd:empty { display:none; }
       .s { font-size:11px; color:var(--secondary-text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; line-height:1.3; }
       .devs { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:6px 1px 1px; margin-top:4px; border-top:1px solid color-mix(in srgb, var(--primary-text-color) 7%, transparent); }
       .devs::-webkit-scrollbar { display:none; }
@@ -548,7 +581,7 @@ class HolmPowerFlowCard extends HTMLElement {
         </svg>
         <div class="node solar" data-e="solar" style="left:${xs}px;--c:${col.s}"><div class="ic"><ha-icon icon="mdi:solar-power-variant"></ha-icon></div><div class="v" id="vS"></div><div class="s" id="sS"></div><div class="k" id="kS"></div></div>
         <div class="node home" data-e="home" style="left:${xh}px;--c:${col.h}"><div class="ic"><div class="ring"></div><ha-icon icon="mdi:home-lightning-bolt"></ha-icon></div><div class="v" id="vH"></div><div class="s" id="sH"></div><div class="k" id="kH"></div></div>
-        <div class="node grid" data-e="grid" style="left:${xg}px"><div class="ic"><ha-icon icon="mdi:transmission-tower"></ha-icon></div><div class="v" id="vG"></div><div class="s" id="sG"></div><div class="k" id="kG"></div></div>
+        <div class="node grid" data-e="grid" style="left:${xg}px"><div class="ic"><ha-icon icon="mdi:transmission-tower"></ha-icon></div><div class="v" id="vG"></div><div class="s" id="sG"></div><div class="cd" id="cG"></div><div class="k" id="kG"></div></div>
       </div>
       <div class="devs"></div>
     </ha-card>`;
@@ -573,7 +606,7 @@ class HolmPowerFlowCard extends HTMLElement {
   _update(force) {
     const sr = this.shadowRoot; if (!sr || !sr.querySelector(".flow") || !this._hass) return;
     const c = this._c, e = this._ent.bind(this);
-    const ids = [e("solar"), e("grid"), c.export_power, c.home_power, e("expE"), e("solarE"), e("tariff"), c.solar_label, c.grid_label, c.home_label, ...(this._src?.devices || []).map((d) => d.entity)];
+    const ids = [e("solar"), e("grid"), c.export_power, c.home_power, e("expE"), e("solarE"), e("tariff"), this._hcEnt(), c.solar_label, c.grid_label, c.home_label, ...(this._src?.devices || []).map((d) => d.entity)];
     const sig = ids.map((i) => (i ? this._hass.states[i]?.state : "")).join("|");
     if (!force && sig === this._sig) return;
     this._sig = sig;
@@ -590,8 +623,13 @@ class HolmPowerFlowCard extends HTMLElement {
     set("sH", this._label("home_label", v.home > 0 ? `${fr(v.share * 100, 0)} % solaire` : "Maison"));
     if (v.exp > v.th) set("vG", w(v.exp, `<span class="ar">↑</span>${v.est ? "≈" : ""}`));
     else set("vG", w(v.imp, v.imp > v.th ? `<span class="ar">↓</span>` : ""));
-    const tv = e("tariff") ? parseFloat(this._hass.states[e("tariff")]?.state) : NaN;
-    set("sG", this._label("grid_label", v.exp > v.th ? "Revente" : !isNaN(tv) ? `${this._isHC ? "HC" : "HP"} · ${fr(tv, 4)} €` : "Réseau"));
+    const T0 = this._tar, tv = T0 ? T0.price : NaN, long = c.tariff_display === "label" || c.tariff_display === "both";
+    const per = T0 ? (long ? (T0.isHC ? "Heures creuses" : "Heures pleines") : (T0.isHC ? "HC" : "HP")) : "";
+    set("sG", this._label("grid_label", v.exp > v.th ? "Revente" : T0 ? `${per}${!isNaN(tv) ? ` · ${fr(tv, 4)} €` : ""}` : "Réseau"));
+    { const sg = sr.getElementById("sG"); if (sg) sg.title = sg.textContent; }
+    const cdEl = sr.getElementById("cG");
+    if (cdEl) { const cd = this._countdown(T0); if (cdEl.textContent !== cd) cdEl.textContent = cd;
+      cdEl.style.setProperty("--cdc", T0 && !T0.isHC ? (c.grid_color || DEF.grid_color) : (c.grid_hp_color || DEF.grid_hp_color)); }
     // totaux du jour
     const T = c.show_totals !== false ? this._tot : null;
     const kv = (x) => (isNaN(x) ? "" : fr(x, x < 10 ? 2 : 1));
@@ -642,7 +680,8 @@ const L = { show_totals: "Totaux du jour sous les icônes", title: "Titre (optio
   solar_power: "Puissance solaire (vide = tableau Énergie)", grid_power: "Puissance réseau (vide = tableau Énergie)", export_power: "Puissance revendue (vide = estimée)",
   home_power: "Puissance maison (vide = calculée)", export_energy: "Énergie revendue pour l'estimation (vide = tableau Énergie)",
   solar_label: "Info sous Solaire (vide = production du jour)", home_label: "Info sous Maison (vide = part solaire)", grid_label: "Info sous Réseau (vide = tarif HC/HP)",
-  tariff_entity: "Tarif actuel (couleur HC / HP)", hc_price: "Prix HC (nombre, pour reconnaître les heures creuses)", hc_price_entity: "… ou entité contenant le prix HC",
+  tariff_display: "Heures creuses / pleines", show_countdown: "Décompte jusqu'au prochain changement HC / HP", hc_entity: "Heures creuses HOLM HP/HC (vide = détection automatique)",
+  tariff_entity: "Ancienne méthode : tarif actuel (prioritaire si renseigné)", hc_price: "Prix HC (nombre, pour reconnaître les heures creuses)", hc_price_entity: "… ou entité contenant le prix HC",
   show_devices: "Afficher les appareils actifs", show_device_names: "Afficher le nom des appareils", max_devices: "Nombre max d'appareils", device_threshold: "Seuil appareil (W)",
   solar_color: "Couleur solaire", home_color: "Couleur maison / appareils", grid_color: "Couleur réseau (HC)", grid_hp_color: "Couleur réseau (HP)", export_color: "Couleur revente" };
 const hex2rgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return undefined; const n = parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
@@ -664,6 +703,9 @@ const SCHEMA = [
   ] },
   { type: "expandable", title: "Infos sous les icônes", icon: "mdi:label-outline", flatten: true, schema: [
     { name: "solar_label", selector: { entity: {} } }, { name: "home_label", selector: { entity: {} } }, { name: "grid_label", selector: { entity: {} } },
+    { name: "tariff_display", selector: { select: { mode: "dropdown", options: [{ value: "color", label: "Couleur du réseau (HC / HP)" }, { value: "label", label: "Repère « Heures creuses » / « Heures pleines »" }, { value: "both", label: "Couleur et repère" }] } } },
+    { name: "show_countdown", selector: { boolean: {} } },
+    { name: "hc_entity", selector: { entity: { domain: ["binary_sensor"] } } },
     { name: "tariff_entity", selector: { entity: { domain: ANY } } },
     { type: "grid", name: "", schema: [ { name: "hc_price", selector: { number: { min: 0, max: 2, step: 0.0001, mode: "box" } } }, { name: "hc_price_entity", selector: { entity: { domain: ANY } } } ] },
   ] },
@@ -675,7 +717,7 @@ const SCHEMA = [
   ] },
   { type: "expandable", title: "Couleurs", icon: "mdi:palette", flatten: true, schema: [ { type: "grid", name: "", schema: COLORS.map((n) => ({ name: n, selector: { color_rgb: {} } })) } ] },
 ];
-const DEFAULTS = { show_totals: true, threshold: 20, curve_factor: 1, show_devices: true, max_devices: 10, device_threshold: 15, show_device_names: false, show_frame: true };
+const DEFAULTS = { tariff_display: "color", show_countdown: true, show_totals: true, threshold: 20, curve_factor: 1, show_devices: true, max_devices: 10, device_threshold: 15, show_device_names: false, show_frame: true };
 class HolmPowerFlowCardEditor extends HTMLElement {
   setConfig(c) { const j = JSON.stringify(c); this._config = JSON.parse(j); if (j === this._last && this._f) return; this._build(); }
   set hass(h) { this._hass = h; if (!this._f) this._build(); else this._f.hass = h; }

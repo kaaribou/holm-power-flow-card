@@ -16,7 +16,7 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 - 🟠 **Points animés** dont la vitesse suit la puissance (par paliers, pour rester fluide).
 - 🍩 **Anneau solaire** autour de la maison : la part de votre consommation couverte par le soleil (« 60 % solaire »).
 - ↑ **Revente** : mesurée si vous avez un capteur, sinon **estimée** à partir de l'énergie revendue (signalée par ≈).
-- 💶 **Heures creuses / pleines** : le réseau change de couleur selon le tarif en cours, avec le prix du kWh.
+- 💶 **Heures creuses / pleines** : période et prix du kWh en cours, en couleur ou en toutes lettres, et le **décompte** jusqu'au prochain changement. Avec [HOLM HP/HC](https://github.com/kaaribou/holm-tarif), c'est automatique.
 - 🔌 **Appareils actifs** : les appareils du tableau Énergie qui consomment, triés par puissance, avec une icône choisie automatiquement (lave-linge, four, chauffe-eau, TV, clim…).
 - 🧮 **Totaux du jour** sous les nœuds : kWh achetés ↓ et revendus ↑ au réseau, produits par le solaire, consommés par la maison.
 - 📈 **Graphiques au toucher** : un toucher sur un nœud ou un appareil ouvre son graphique de puissance (6 h, 24 h, 48 h, 7 j ou dates au choix).
@@ -28,7 +28,21 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 
 ---
 
-### 🆕 Nouveautés de la 1.1.0
+### 🆕 Nouveautés de la 1.2.0
+
+#### 💶 Heures creuses / pleines avec HOLM HP/HC, et le décompte
+
+Si l'intégration [HOLM HP/HC](https://github.com/kaaribou/holm-tarif) est installée, la carte la trouve toute seule (`binary_sensor.heures_creuses`) : plus besoin de renseigner un tarif ni un prix HC.
+
+- **période en cours** et **prix du kWh** sous le réseau ;
+- **décompte** jusqu'au prochain changement : « HC dans 1 h 54 », « HP dans 7 h 54 » (option `show_countdown`) ;
+- **affichage au choix** (`tariff_display`) : couleur du réseau (bleu en HC, orange en HP), repère « Heures creuses » / « Heures pleines », ou les deux.
+
+![Heures pleines puis heures creuses, avec le décompte](docs/images/hp-hc.png)
+
+Sans HOLM HP/HC, rien ne change ; l'ancienne méthode (`tariff_entity` + `hc_price`) reste disponible et reste prioritaire si elle est configurée.
+
+### Nouveautés de la 1.1.0
 
 #### 🧮 Les totaux du jour, en plus du temps réel
 
@@ -100,24 +114,35 @@ type: custom:holm-power-flow-card
 | `export_power` / `home_power` | Puissance revendue / consommée, si vous les avez | estimées |
 | `export_energy` | Énergie revendue (kWh) pour estimer la revente | tableau Énergie |
 | `solar_label` / `home_label` / `grid_label` | Entité à afficher sous un nœud (`none` pour rien) | production du jour / part solaire / tarif |
-| `tariff_entity` | Tarif du kWh en cours | — |
-| `hc_price` | Prix des heures creuses : un nombre (`0.1589`) ou une entité | — |
+| `tariff_display` | Heures creuses / pleines : `color` (couleur du réseau), `label` (« Heures creuses » / « Heures pleines ») ou `both` | `color` |
+| `show_countdown` | Décompte jusqu'au prochain changement HC / HP | `true` |
+| `hc_entity` | `binary_sensor` des heures creuses de HOLM HP/HC | détecté automatiquement |
+| `tariff_entity` | Ancienne méthode : tarif du kWh en cours (prioritaire si renseigné) | — |
+| `hc_price` | Ancienne méthode : prix des heures creuses, un nombre (`0.1589`) ou une entité | — |
 | `show_devices` | Afficher les appareils actifs | `true` |
 | `show_device_names` | Afficher leur nom | `false` |
 | `max_devices` / `device_threshold` | Nombre maximum d'appareils / puissance minimale (W) | `10` / `15` |
 | `devices` | Liste d'appareils à la place de ceux du tableau Énergie (`entity`, `name`, `icon`, `color`) | tableau Énergie |
 | `solar_color` / `home_color` / `grid_color` / `grid_hp_color` / `export_color` | Couleurs | or / turquoise / bleu / orange / violet |
 
-### Exemple : tarif heures creuses / pleines
+### Heures creuses / pleines
+
+**Avec [HOLM HP/HC](https://github.com/kaaribou/holm-tarif)** (recommandé) : rien à configurer, la période, le prix et le décompte viennent de `binary_sensor.heures_creuses`.
 
 ```yaml
 type: custom:holm-power-flow-card
-show_device_names: true
+tariff_display: both      # color, label ou both
+```
+
+**Sans HOLM HP/HC**, avec un capteur de tarif :
+
+```yaml
+type: custom:holm-power-flow-card
 tariff_entity: sensor.tarif_actuel
 hc_price: input_number.prix_heures_creuses   # ou un nombre : 0.1589
 ```
 
-Quand le tarif en cours est égal au prix des heures creuses, le réseau passe en bleu et affiche « HC » ; sinon il est orange, « HP ».
+Quand le tarif en cours est égal au prix des heures creuses, la carte affiche « HC » ; sinon « HP ». Si HOLM HP/HC est aussi installé, le décompte s'affiche quand même.
 
 ---
 
