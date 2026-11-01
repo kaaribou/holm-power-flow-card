@@ -4,6 +4,8 @@
 ![Version](https://img.shields.io/github/v/release/kaaribou/holm-power-flow-card)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.1%2B-03a9f4)
 
+🇫🇷 Français · [🇬🇧 English](README.en.md)
+
 **D'où vient l'électricité de la maison, là, maintenant ? Soleil, réseau, revente : tout tient sur une ligne.**
 
 HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos panneaux solaires, la maison et le réseau, dans une carte **compacte et horizontale**. Des points animés circulent sur chaque liaison, plus ou moins vite selon la puissance ; l'anneau autour de la maison montre la **part solaire** de ce que vous consommez ; et les **appareils actifs** s'affichent juste en dessous.
@@ -28,7 +30,11 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 
 ---
 
-### 🆕 Nouveautés de la 1.2.0
+### 🆕 Nouveautés de la 1.3.0
+
+- 🌍 **La carte parle 8 langues** : français, anglais, allemand, espagnol, italien, néerlandais, portugais et polonais, graphiques et éditeur compris. Elle suit la langue de votre profil Home Assistant (anglais si votre langue n'est pas traduite) ; l'option `language` permet d'en imposer une. Nombres et dates suivent aussi la langue.
+
+### Nouveautés de la 1.2.0
 
 #### 💶 Heures creuses / pleines avec HOLM HP/HC, et le décompte
 
@@ -106,6 +112,7 @@ type: custom:holm-power-flow-card
 | Option | Description | Par défaut |
 |---|---|---|
 | `title` | Titre au-dessus du flux | — |
+| `language` | Langue de la carte : `fr`, `en`, `de`, `es`, `it`, `nl`, `pt`, `pl` | celle du profil |
 | `show_frame` | Afficher le cadre de la carte | `true` |
 | `show_totals` | Totaux du jour sous les nœuds (acheté / revendu, produit, consommé) | `true` |
 | `threshold` | En dessous de ce seuil (W), une liaison est considérée inactive | `20` |

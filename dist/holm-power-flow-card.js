@@ -13,7 +13,161 @@
  * https://github.com/kaaribou/holm-power-flow-card — licence MIT
  */
 (() => {
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
+// ---- traductions (fr, en, de, es, it, nl, pt, pl) ----
+const I18N = {
+  fr: { d: "j", m12: "12 mois", dates: "Dates…", consumption: "Consommation", power: "Puissance", details: "Détails", close: "Fermer", from: "Du", to: "au", show: "Afficher",
+    loading: "Chargement…", hist_unavail: "Historique indisponible", no_data: "Aucune donnée sur cette période.", total: "Total", est_cost: "Coût estimé", at_price: "à {p} €/kWh",
+    avg_per: "Moyenne / {u}", u_hour: "h", u_day: "jour", u_month: "mois", peak: "Pic", cons_per: "Consommation par {u}", per_hour: "heure", per_day: "jour", per_month: "mois",
+    current: "Actuel", buy_peak: "Pic d'achat", sell_peak: "Pic de revente", bought: "Acheté", sold: "Revendu", grid_buy: "Achat au réseau", resale: "Revente",
+    min: "Min", max: "Max", average: "Moyenne", energy: "Énergie", avg_suffix: " (moyenne)",
+    device_power: "Puissance de l'appareil", solar: "Solaire", production: "Production", grid: "Réseau", buy_sell: "Achat et revente", home: "Maison",
+    in_dur: "{p} dans {d}", hc: "HC", hp: "HP", hc_long: "Heures creuses", hp_long: "Heures pleines", kwh_today: "{x} kWh auj.", pct_solar: "{x} % solaire",
+    l_show_totals: "Totaux du jour sous les icônes", l_title: "Titre (optionnel)", l_show_frame: "Afficher le cadre de la carte", l_threshold: "Seuil d'activité (W)", l_curve_factor: "Courbure des lignes (0 = droites)",
+    l_solar_power: "Puissance solaire (vide = tableau Énergie)", l_grid_power: "Puissance réseau (vide = tableau Énergie)", l_export_power: "Puissance revendue (vide = estimée)",
+    l_home_power: "Puissance maison (vide = calculée)", l_export_energy: "Énergie revendue pour l'estimation (vide = tableau Énergie)",
+    l_solar_label: "Info sous Solaire (vide = production du jour)", l_home_label: "Info sous Maison (vide = part solaire)", l_grid_label: "Info sous Réseau (vide = tarif HC/HP)",
+    l_tariff_display: "Heures creuses / pleines", l_show_countdown: "Décompte jusqu'au prochain changement HC / HP", l_hc_entity: "Heures creuses HOLM HP/HC (vide = détection automatique)",
+    l_tariff_entity: "Ancienne méthode : tarif actuel (prioritaire si renseigné)", l_hc_price: "Prix HC (nombre, pour reconnaître les heures creuses)", l_hc_price_entity: "… ou entité contenant le prix HC",
+    l_show_devices: "Afficher les appareils actifs", l_show_device_names: "Afficher le nom des appareils", l_max_devices: "Nombre max d'appareils", l_device_threshold: "Seuil appareil (W)",
+    l_solar_color: "Couleur solaire", l_home_color: "Couleur maison / appareils", l_grid_color: "Couleur réseau (HC)", l_grid_hp_color: "Couleur réseau (HP)", l_export_color: "Couleur revente",
+    l_language: "Langue", auto: "Automatique (profil)", sec_sensors: "Capteurs", sec_labels: "Infos sous les icônes", sec_devices: "Appareils actifs", sec_colors: "Couleurs",
+    td_color: "Couleur du réseau (HC / HP)", td_label: "Repère « Heures creuses » / « Heures pleines »", td_both: "Couleur et repère",
+    card_name: "HOLM – Flux de puissance compact", card_desc: "Solaire → Maison ⇄ Réseau en temps réel, totaux du jour et graphiques au toucher, avec les appareils actifs" },
+  en: { d: "d", m12: "12 months", dates: "Dates…", consumption: "Consumption", power: "Power", details: "Details", close: "Close", from: "From", to: "to", show: "Show",
+    loading: "Loading…", hist_unavail: "History unavailable", no_data: "No data for this period.", total: "Total", est_cost: "Estimated cost", at_price: "at {p} €/kWh",
+    avg_per: "Average / {u}", u_hour: "h", u_day: "day", u_month: "month", peak: "Peak", cons_per: "Consumption per {u}", per_hour: "hour", per_day: "day", per_month: "month",
+    current: "Now", buy_peak: "Import peak", sell_peak: "Export peak", bought: "Imported", sold: "Exported", grid_buy: "Grid import", resale: "Export",
+    min: "Min", max: "Max", average: "Average", energy: "Energy", avg_suffix: " (average)",
+    device_power: "Device power", solar: "Solar", production: "Production", grid: "Grid", buy_sell: "Import and export", home: "Home",
+    in_dur: "{p} in {d}", hc: "Off-peak", hp: "Peak", hc_long: "Off-peak hours", hp_long: "Peak hours", kwh_today: "{x} kWh today", pct_solar: "{x}% solar",
+    l_show_totals: "Today's totals under the icons", l_title: "Title (optional)", l_show_frame: "Show the card frame", l_threshold: "Activity threshold (W)", l_curve_factor: "Line curvature (0 = straight)",
+    l_solar_power: "Solar power (empty = Energy dashboard)", l_grid_power: "Grid power (empty = Energy dashboard)", l_export_power: "Export power (empty = estimated)",
+    l_home_power: "Home power (empty = calculated)", l_export_energy: "Exported energy for the estimate (empty = Energy dashboard)",
+    l_solar_label: "Info under Solar (empty = today's production)", l_home_label: "Info under Home (empty = solar share)", l_grid_label: "Info under Grid (empty = peak/off-peak tariff)",
+    l_tariff_display: "Off-peak / peak hours", l_show_countdown: "Countdown to the next peak / off-peak change", l_hc_entity: "HOLM HP/HC off-peak sensor (empty = auto-detect)",
+    l_tariff_entity: "Legacy method: current tariff (takes priority if set)", l_hc_price: "Off-peak price (number, to recognise off-peak hours)", l_hc_price_entity: "… or entity holding the off-peak price",
+    l_show_devices: "Show active devices", l_show_device_names: "Show device names", l_max_devices: "Max number of devices", l_device_threshold: "Device threshold (W)",
+    l_solar_color: "Solar colour", l_home_color: "Home / devices colour", l_grid_color: "Grid colour (off-peak)", l_grid_hp_color: "Grid colour (peak)", l_export_color: "Export colour",
+    l_language: "Language", auto: "Automatic (profile)", sec_sensors: "Sensors", sec_labels: "Info under the icons", sec_devices: "Active devices", sec_colors: "Colours",
+    td_color: "Grid colour (off-peak / peak)", td_label: "“Off-peak” / “Peak” label", td_both: "Colour and label",
+    card_name: "HOLM – Compact power flow", card_desc: "Solar → Home ⇄ Grid in real time, today's totals and charts on tap, with active devices" },
+  de: { d: "T", m12: "12 Monate", dates: "Daten…", consumption: "Verbrauch", power: "Leistung", details: "Details", close: "Schließen", from: "Von", to: "bis", show: "Anzeigen",
+    loading: "Wird geladen…", hist_unavail: "Verlauf nicht verfügbar", no_data: "Keine Daten für diesen Zeitraum.", total: "Gesamt", est_cost: "Geschätzte Kosten", at_price: "zu {p} €/kWh",
+    avg_per: "Durchschnitt / {u}", u_hour: "h", u_day: "Tag", u_month: "Monat", peak: "Spitze", cons_per: "Verbrauch pro {u}", per_hour: "Stunde", per_day: "Tag", per_month: "Monat",
+    current: "Aktuell", buy_peak: "Bezugsspitze", sell_peak: "Einspeisespitze", bought: "Bezogen", sold: "Eingespeist", grid_buy: "Netzbezug", resale: "Einspeisung",
+    min: "Min", max: "Max", average: "Durchschnitt", energy: "Energie", avg_suffix: " (Durchschnitt)",
+    device_power: "Geräteleistung", solar: "Solar", production: "Erzeugung", grid: "Netz", buy_sell: "Bezug und Einspeisung", home: "Haus",
+    in_dur: "{p} in {d}", hc: "NT", hp: "HT", hc_long: "Niedertarif", hp_long: "Hochtarif", kwh_today: "{x} kWh heute", pct_solar: "{x} % Solar",
+    l_show_totals: "Tagessummen unter den Symbolen", l_title: "Titel (optional)", l_show_frame: "Kartenrahmen anzeigen", l_threshold: "Aktivitätsschwelle (W)", l_curve_factor: "Linienkrümmung (0 = gerade)",
+    l_solar_power: "Solarleistung (leer = Energie-Dashboard)", l_grid_power: "Netzleistung (leer = Energie-Dashboard)", l_export_power: "Einspeiseleistung (leer = geschätzt)",
+    l_home_power: "Hausleistung (leer = berechnet)", l_export_energy: "Eingespeiste Energie für die Schätzung (leer = Energie-Dashboard)",
+    l_solar_label: "Info unter Solar (leer = heutige Erzeugung)", l_home_label: "Info unter Haus (leer = Solaranteil)", l_grid_label: "Info unter Netz (leer = NT/HT-Tarif)",
+    l_tariff_display: "Niedertarif / Hochtarif", l_show_countdown: "Countdown bis zum nächsten NT/HT-Wechsel", l_hc_entity: "Niedertarif-Sensor HOLM HP/HC (leer = automatisch)",
+    l_tariff_entity: "Alte Methode: aktueller Tarif (hat Vorrang, wenn gesetzt)", l_hc_price: "NT-Preis (Zahl, um den Niedertarif zu erkennen)", l_hc_price_entity: "… oder Entität mit dem NT-Preis",
+    l_show_devices: "Aktive Geräte anzeigen", l_show_device_names: "Gerätenamen anzeigen", l_max_devices: "Max. Anzahl Geräte", l_device_threshold: "Geräteschwelle (W)",
+    l_solar_color: "Farbe Solar", l_home_color: "Farbe Haus / Geräte", l_grid_color: "Farbe Netz (NT)", l_grid_hp_color: "Farbe Netz (HT)", l_export_color: "Farbe Einspeisung",
+    l_language: "Sprache", auto: "Automatisch (Profil)", sec_sensors: "Sensoren", sec_labels: "Infos unter den Symbolen", sec_devices: "Aktive Geräte", sec_colors: "Farben",
+    td_color: "Netzfarbe (NT / HT)", td_label: "Hinweis „Niedertarif“ / „Hochtarif“", td_both: "Farbe und Hinweis",
+    card_name: "HOLM – Kompakter Energiefluss", card_desc: "Solar → Haus ⇄ Netz in Echtzeit, Tagessummen und Diagramme per Tippen, mit aktiven Geräten" },
+  es: { d: "d", m12: "12 meses", dates: "Fechas…", consumption: "Consumo", power: "Potencia", details: "Detalles", close: "Cerrar", from: "Del", to: "al", show: "Mostrar",
+    loading: "Cargando…", hist_unavail: "Historial no disponible", no_data: "No hay datos en este periodo.", total: "Total", est_cost: "Coste estimado", at_price: "a {p} €/kWh",
+    avg_per: "Media / {u}", u_hour: "h", u_day: "día", u_month: "mes", peak: "Pico", cons_per: "Consumo por {u}", per_hour: "hora", per_day: "día", per_month: "mes",
+    current: "Actual", buy_peak: "Pico de compra", sell_peak: "Pico de venta", bought: "Comprado", sold: "Vendido", grid_buy: "Compra a la red", resale: "Venta",
+    min: "Mín", max: "Máx", average: "Media", energy: "Energía", avg_suffix: " (media)",
+    device_power: "Potencia del dispositivo", solar: "Solar", production: "Producción", grid: "Red", buy_sell: "Compra y venta", home: "Casa",
+    in_dur: "{p} en {d}", hc: "Valle", hp: "Punta", hc_long: "Horas valle", hp_long: "Horas punta", kwh_today: "{x} kWh hoy", pct_solar: "{x} % solar",
+    l_show_totals: "Totales del día bajo los iconos", l_title: "Título (opcional)", l_show_frame: "Mostrar el marco de la tarjeta", l_threshold: "Umbral de actividad (W)", l_curve_factor: "Curvatura de las líneas (0 = rectas)",
+    l_solar_power: "Potencia solar (vacío = panel de Energía)", l_grid_power: "Potencia de red (vacío = panel de Energía)", l_export_power: "Potencia vendida (vacío = estimada)",
+    l_home_power: "Potencia de la casa (vacío = calculada)", l_export_energy: "Energía vendida para la estimación (vacío = panel de Energía)",
+    l_solar_label: "Info bajo Solar (vacío = producción del día)", l_home_label: "Info bajo Casa (vacío = parte solar)", l_grid_label: "Info bajo Red (vacío = tarifa valle/punta)",
+    l_tariff_display: "Horas valle / punta", l_show_countdown: "Cuenta atrás hasta el próximo cambio valle / punta", l_hc_entity: "Sensor de horas valle HOLM HP/HC (vacío = detección automática)",
+    l_tariff_entity: "Método antiguo: tarifa actual (prioritaria si se indica)", l_hc_price: "Precio valle (número, para reconocer las horas valle)", l_hc_price_entity: "… o entidad con el precio valle",
+    l_show_devices: "Mostrar los dispositivos activos", l_show_device_names: "Mostrar el nombre de los dispositivos", l_max_devices: "Número máx. de dispositivos", l_device_threshold: "Umbral de dispositivo (W)",
+    l_solar_color: "Color solar", l_home_color: "Color casa / dispositivos", l_grid_color: "Color red (valle)", l_grid_hp_color: "Color red (punta)", l_export_color: "Color venta",
+    l_language: "Idioma", auto: "Automático (perfil)", sec_sensors: "Sensores", sec_labels: "Info bajo los iconos", sec_devices: "Dispositivos activos", sec_colors: "Colores",
+    td_color: "Color de la red (valle / punta)", td_label: "Indicación «Horas valle» / «Horas punta»", td_both: "Color e indicación",
+    card_name: "HOLM – Flujo de potencia compacto", card_desc: "Solar → Casa ⇄ Red en tiempo real, totales del día y gráficos al tocar, con los dispositivos activos" },
+  it: { d: "g", m12: "12 mesi", dates: "Date…", consumption: "Consumo", power: "Potenza", details: "Dettagli", close: "Chiudi", from: "Dal", to: "al", show: "Mostra",
+    loading: "Caricamento…", hist_unavail: "Cronologia non disponibile", no_data: "Nessun dato per questo periodo.", total: "Totale", est_cost: "Costo stimato", at_price: "a {p} €/kWh",
+    avg_per: "Media / {u}", u_hour: "h", u_day: "giorno", u_month: "mese", peak: "Picco", cons_per: "Consumo per {u}", per_hour: "ora", per_day: "giorno", per_month: "mese",
+    current: "Attuale", buy_peak: "Picco di prelievo", sell_peak: "Picco di immissione", bought: "Prelevato", sold: "Immesso", grid_buy: "Prelievo dalla rete", resale: "Immissione",
+    min: "Min", max: "Max", average: "Media", energy: "Energia", avg_suffix: " (media)",
+    device_power: "Potenza del dispositivo", solar: "Solare", production: "Produzione", grid: "Rete", buy_sell: "Prelievo e immissione", home: "Casa",
+    in_dur: "{p} tra {d}", hc: "F. punta", hp: "Punta", hc_long: "Fuori punta", hp_long: "Ore di punta", kwh_today: "{x} kWh oggi", pct_solar: "{x}% solare",
+    l_show_totals: "Totali del giorno sotto le icone", l_title: "Titolo (facoltativo)", l_show_frame: "Mostra la cornice della scheda", l_threshold: "Soglia di attività (W)", l_curve_factor: "Curvatura delle linee (0 = dritte)",
+    l_solar_power: "Potenza solare (vuoto = dashboard Energia)", l_grid_power: "Potenza di rete (vuoto = dashboard Energia)", l_export_power: "Potenza immessa (vuoto = stimata)",
+    l_home_power: "Potenza della casa (vuoto = calcolata)", l_export_energy: "Energia immessa per la stima (vuoto = dashboard Energia)",
+    l_solar_label: "Info sotto Solare (vuoto = produzione del giorno)", l_home_label: "Info sotto Casa (vuoto = quota solare)", l_grid_label: "Info sotto Rete (vuoto = tariffa a fasce)",
+    l_tariff_display: "Fuori punta / punta", l_show_countdown: "Conto alla rovescia al prossimo cambio di fascia", l_hc_entity: "Sensore fuori punta HOLM HP/HC (vuoto = rilevamento automatico)",
+    l_tariff_entity: "Metodo precedente: tariffa attuale (prioritaria se impostata)", l_hc_price: "Prezzo fuori punta (numero, per riconoscere la fascia)", l_hc_price_entity: "… o entità con il prezzo fuori punta",
+    l_show_devices: "Mostra i dispositivi attivi", l_show_device_names: "Mostra il nome dei dispositivi", l_max_devices: "Numero max di dispositivi", l_device_threshold: "Soglia dispositivo (W)",
+    l_solar_color: "Colore solare", l_home_color: "Colore casa / dispositivi", l_grid_color: "Colore rete (fuori punta)", l_grid_hp_color: "Colore rete (punta)", l_export_color: "Colore immissione",
+    l_language: "Lingua", auto: "Automatica (profilo)", sec_sensors: "Sensori", sec_labels: "Info sotto le icone", sec_devices: "Dispositivi attivi", sec_colors: "Colori",
+    td_color: "Colore della rete (fuori punta / punta)", td_label: "Indicazione «Fuori punta» / «Ore di punta»", td_both: "Colore e indicazione",
+    card_name: "HOLM – Flusso di potenza compatto", card_desc: "Solare → Casa ⇄ Rete in tempo reale, totali del giorno e grafici al tocco, con i dispositivi attivi" },
+  nl: { d: "d", m12: "12 maanden", dates: "Datums…", consumption: "Verbruik", power: "Vermogen", details: "Details", close: "Sluiten", from: "Van", to: "tot", show: "Tonen",
+    loading: "Laden…", hist_unavail: "Geschiedenis niet beschikbaar", no_data: "Geen gegevens voor deze periode.", total: "Totaal", est_cost: "Geschatte kosten", at_price: "tegen {p} €/kWh",
+    avg_per: "Gemiddeld / {u}", u_hour: "u", u_day: "dag", u_month: "maand", peak: "Piek", cons_per: "Verbruik per {u}", per_hour: "uur", per_day: "dag", per_month: "maand",
+    current: "Nu", buy_peak: "Afnamepiek", sell_peak: "Teruglevering-piek", bought: "Afgenomen", sold: "Teruggeleverd", grid_buy: "Afname van het net", resale: "Teruglevering",
+    min: "Min", max: "Max", average: "Gemiddeld", energy: "Energie", avg_suffix: " (gemiddeld)",
+    device_power: "Vermogen van het apparaat", solar: "Zon", production: "Opwekking", grid: "Net", buy_sell: "Afname en teruglevering", home: "Huis",
+    in_dur: "{p} over {d}", hc: "Dal", hp: "Piek", hc_long: "Daltarief", hp_long: "Piektarief", kwh_today: "{x} kWh vandaag", pct_solar: "{x}% zon",
+    l_show_totals: "Dagtotalen onder de pictogrammen", l_title: "Titel (optioneel)", l_show_frame: "Kaartkader tonen", l_threshold: "Activiteitsdrempel (W)", l_curve_factor: "Kromming van de lijnen (0 = recht)",
+    l_solar_power: "Zonnevermogen (leeg = Energiedashboard)", l_grid_power: "Netvermogen (leeg = Energiedashboard)", l_export_power: "Terugleververmogen (leeg = geschat)",
+    l_home_power: "Huisvermogen (leeg = berekend)", l_export_energy: "Teruggeleverde energie voor de schatting (leeg = Energiedashboard)",
+    l_solar_label: "Info onder Zon (leeg = opwekking van vandaag)", l_home_label: "Info onder Huis (leeg = aandeel zon)", l_grid_label: "Info onder Net (leeg = dal/piek-tarief)",
+    l_tariff_display: "Dal- / piekuren", l_show_countdown: "Aftellen tot de volgende dal/piek-wissel", l_hc_entity: "Daltariefsensor HOLM HP/HC (leeg = automatisch)",
+    l_tariff_entity: "Oude methode: huidig tarief (heeft voorrang indien ingesteld)", l_hc_price: "Dalprijs (getal, om daluren te herkennen)", l_hc_price_entity: "… of entiteit met de dalprijs",
+    l_show_devices: "Actieve apparaten tonen", l_show_device_names: "Apparaatnamen tonen", l_max_devices: "Max. aantal apparaten", l_device_threshold: "Apparaatdrempel (W)",
+    l_solar_color: "Kleur zon", l_home_color: "Kleur huis / apparaten", l_grid_color: "Kleur net (dal)", l_grid_hp_color: "Kleur net (piek)", l_export_color: "Kleur teruglevering",
+    l_language: "Taal", auto: "Automatisch (profiel)", sec_sensors: "Sensoren", sec_labels: "Info onder de pictogrammen", sec_devices: "Actieve apparaten", sec_colors: "Kleuren",
+    td_color: "Kleur van het net (dal / piek)", td_label: "Label ‘Daltarief’ / ‘Piektarief’", td_both: "Kleur en label",
+    card_name: "HOLM – Compacte energiestroom", card_desc: "Zon → Huis ⇄ Net in realtime, dagtotalen en grafieken met een tik, met actieve apparaten" },
+  pt: { d: "d", m12: "12 meses", dates: "Datas…", consumption: "Consumo", power: "Potência", details: "Detalhes", close: "Fechar", from: "De", to: "a", show: "Mostrar",
+    loading: "A carregar…", hist_unavail: "Histórico indisponível", no_data: "Sem dados neste período.", total: "Total", est_cost: "Custo estimado", at_price: "a {p} €/kWh",
+    avg_per: "Média / {u}", u_hour: "h", u_day: "dia", u_month: "mês", peak: "Pico", cons_per: "Consumo por {u}", per_hour: "hora", per_day: "dia", per_month: "mês",
+    current: "Atual", buy_peak: "Pico de compra", sell_peak: "Pico de venda", bought: "Comprado", sold: "Vendido", grid_buy: "Compra à rede", resale: "Venda",
+    min: "Mín", max: "Máx", average: "Média", energy: "Energia", avg_suffix: " (média)",
+    device_power: "Potência do dispositivo", solar: "Solar", production: "Produção", grid: "Rede", buy_sell: "Compra e venda", home: "Casa",
+    in_dur: "{p} em {d}", hc: "Vazio", hp: "Cheias", hc_long: "Horas de vazio", hp_long: "Horas cheias", kwh_today: "{x} kWh hoje", pct_solar: "{x}% solar",
+    l_show_totals: "Totais do dia sob os ícones", l_title: "Título (opcional)", l_show_frame: "Mostrar a moldura do cartão", l_threshold: "Limite de atividade (W)", l_curve_factor: "Curvatura das linhas (0 = retas)",
+    l_solar_power: "Potência solar (vazio = painel Energia)", l_grid_power: "Potência da rede (vazio = painel Energia)", l_export_power: "Potência vendida (vazio = estimada)",
+    l_home_power: "Potência da casa (vazio = calculada)", l_export_energy: "Energia vendida para a estimativa (vazio = painel Energia)",
+    l_solar_label: "Info sob Solar (vazio = produção do dia)", l_home_label: "Info sob Casa (vazio = parte solar)", l_grid_label: "Info sob Rede (vazio = tarifa bi-horária)",
+    l_tariff_display: "Horas de vazio / cheias", l_show_countdown: "Contagem até à próxima mudança vazio / cheias", l_hc_entity: "Sensor de horas de vazio HOLM HP/HC (vazio = deteção automática)",
+    l_tariff_entity: "Método antigo: tarifa atual (prioritária se indicada)", l_hc_price: "Preço de vazio (número, para reconhecer as horas de vazio)", l_hc_price_entity: "… ou entidade com o preço de vazio",
+    l_show_devices: "Mostrar os dispositivos ativos", l_show_device_names: "Mostrar o nome dos dispositivos", l_max_devices: "Número máx. de dispositivos", l_device_threshold: "Limite do dispositivo (W)",
+    l_solar_color: "Cor solar", l_home_color: "Cor casa / dispositivos", l_grid_color: "Cor da rede (vazio)", l_grid_hp_color: "Cor da rede (cheias)", l_export_color: "Cor da venda",
+    l_language: "Idioma", auto: "Automático (perfil)", sec_sensors: "Sensores", sec_labels: "Info sob os ícones", sec_devices: "Dispositivos ativos", sec_colors: "Cores",
+    td_color: "Cor da rede (vazio / cheias)", td_label: "Indicação «Horas de vazio» / «Horas cheias»", td_both: "Cor e indicação",
+    card_name: "HOLM – Fluxo de potência compacto", card_desc: "Solar → Casa ⇄ Rede em tempo real, totais do dia e gráficos ao toque, com os dispositivos ativos" },
+  pl: { d: "d", m12: "12 mies.", dates: "Daty…", consumption: "Zużycie", power: "Moc", details: "Szczegóły", close: "Zamknij", from: "Od", to: "do", show: "Pokaż",
+    loading: "Ładowanie…", hist_unavail: "Historia niedostępna", no_data: "Brak danych w tym okresie.", total: "Razem", est_cost: "Szacowany koszt", at_price: "po {p} €/kWh",
+    avg_per: "Średnio / {u}", u_hour: "h", u_day: "dzień", u_month: "mies.", peak: "Szczyt", cons_per: "Zużycie na {u}", per_hour: "godzinę", per_day: "dzień", per_month: "miesiąc",
+    current: "Teraz", buy_peak: "Szczyt poboru", sell_peak: "Szczyt oddawania", bought: "Pobrano", sold: "Oddano", grid_buy: "Pobór z sieci", resale: "Oddawanie",
+    min: "Min", max: "Maks", average: "Średnia", energy: "Energia", avg_suffix: " (średnia)",
+    device_power: "Moc urządzenia", solar: "PV", production: "Produkcja", grid: "Sieć", buy_sell: "Pobór i oddawanie", home: "Dom",
+    in_dur: "{p} za {d}", hc: "Poza szczytem", hp: "Szczyt", hc_long: "Strefa pozaszczytowa", hp_long: "Strefa szczytowa", kwh_today: "{x} kWh dziś", pct_solar: "{x}% PV",
+    l_show_totals: "Dzisiejsze sumy pod ikonami", l_title: "Tytuł (opcjonalnie)", l_show_frame: "Pokaż ramkę karty", l_threshold: "Próg aktywności (W)", l_curve_factor: "Krzywizna linii (0 = proste)",
+    l_solar_power: "Moc PV (puste = panel Energia)", l_grid_power: "Moc sieci (puste = panel Energia)", l_export_power: "Moc oddawana (puste = szacowana)",
+    l_home_power: "Moc domu (puste = obliczana)", l_export_energy: "Energia oddana do szacowania (puste = panel Energia)",
+    l_solar_label: "Info pod PV (puste = dzisiejsza produkcja)", l_home_label: "Info pod Domem (puste = udział PV)", l_grid_label: "Info pod Siecią (puste = taryfa strefowa)",
+    l_tariff_display: "Strefa pozaszczytowa / szczytowa", l_show_countdown: "Odliczanie do następnej zmiany strefy", l_hc_entity: "Czujnik strefy pozaszczytowej HOLM HP/HC (puste = automatycznie)",
+    l_tariff_entity: "Stara metoda: bieżąca taryfa (ma pierwszeństwo, jeśli ustawiona)", l_hc_price: "Cena pozaszczytowa (liczba, do rozpoznania strefy)", l_hc_price_entity: "… lub encja z ceną pozaszczytową",
+    l_show_devices: "Pokaż aktywne urządzenia", l_show_device_names: "Pokaż nazwy urządzeń", l_max_devices: "Maks. liczba urządzeń", l_device_threshold: "Próg urządzenia (W)",
+    l_solar_color: "Kolor PV", l_home_color: "Kolor domu / urządzeń", l_grid_color: "Kolor sieci (poza szczytem)", l_grid_hp_color: "Kolor sieci (szczyt)", l_export_color: "Kolor oddawania",
+    l_language: "Język", auto: "Automatycznie (profil)", sec_sensors: "Czujniki", sec_labels: "Info pod ikonami", sec_devices: "Aktywne urządzenia", sec_colors: "Kolory",
+    td_color: "Kolor sieci (poza szczytem / szczyt)", td_label: "Etykieta „Poza szczytem” / „Szczyt”", td_both: "Kolor i etykieta",
+    card_name: "HOLM – Kompaktowy przepływ mocy", card_desc: "PV → Dom ⇄ Sieć w czasie rzeczywistym, dzisiejsze sumy i wykresy po dotknięciu, z aktywnymi urządzeniami" },
+};
+const LANG_NAMES = { fr: "Français", en: "English", de: "Deutsch", es: "Español", it: "Italiano", nl: "Nederlands", pt: "Português", pl: "Polski" };
+const LOCALES = { fr: "fr-FR", en: "en-GB", de: "de-DE", es: "es-ES", it: "it-IT", nl: "nl-NL", pt: "pt-PT", pl: "pl-PL" };
+// langue : option `language` de la carte, sinon celle du profil Home Assistant ; anglais si non traduite
+const langOf = (hass, c) => { const l = String((c && c.language) || hass?.locale?.language || hass?.language || navigator.language || "en").toLowerCase().split(/[-_]/)[0]; return I18N[l] ? l : "en"; };
+const tr = (l, k, v) => { let s = (I18N[l] && I18N[l][k]) ?? I18N.en[k] ?? I18N.fr[k] ?? k; if (v) for (const [a, b] of Object.entries(v)) s = s.replace("{" + a + "}", b); return s; };
+let NUMLOC = "fr-FR"; // format des nombres et des dates, suit la langue de la dernière carte affichée
+const setLoc = (hass, c) => { const l = langOf(hass, c); const p = hass?.locale?.language; NUMLOC = !(c && c.language) && p && p.toLowerCase().startsWith(l) ? p : LOCALES[l]; return l; };
 // ---- holm-energy-chart : panneau graphique partagé (HOLM Power Flow Card / HOLM Energy Cards) ----
 // open(hass, {
 //   name, subtitle, color, icon, entity (pour « Détails »),
@@ -22,8 +176,8 @@ const VERSION = "1.2.0";
 //   energy: [statistic_id…] (kWh, ajoutés),  energyNeg: [statistic_id…] (soustraits),  energyOut: [statistic_id…] (revente, réseau)
 //   price: €/kWh (estimation du coût, mode énergie), outColor, defaultRange
 // })
-if (!customElements.get("holm-energy-chart-v1")) {
-  const frc = (v, d = 1) => Number(v).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+if (!customElements.get("holm-energy-chart-v1b")) {
+  const frc = (v, d = 1) => Number(v).toLocaleString(NUMLOC, { minimumFractionDigits: d, maximumFractionDigits: d });
   const escc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fW = (w) => (Math.abs(w) >= 1000 ? `${frc(w / 1000, Math.abs(w) >= 10000 ? 1 : 2)} kW` : `${frc(w, 0)} W`);
   const fK = (k) => `${frc(k, Math.abs(k) < 10 ? 2 : 1)} kWh`;
@@ -36,11 +190,12 @@ if (!customElements.get("holm-energy-chart-v1")) {
       this._onKey = (e) => { if (e.key === "Escape") this.close(); };
       this._onResize = () => this._draw();
     }
+    _t(k, v) { return tr(this._l, k, v); }
     open(hass, o) {
-      this._hass = hass; this._o = o; this._data = null;
+      this._hass = hass; this._o = o; this._data = null; this._l = o.lang || langOf(hass);
       this._ranges = o.mode === "energy"
-        ? [["24h", "24 h"], ["7d", "7 j"], ["30d", "30 j"], ["12m", "12 mois"], ["custom", "Dates…"]]
-        : [["6h", "6 h"], ["24h", "24 h"], ["48h", "48 h"], ["7d", "7 j"], ["custom", "Dates…"]];
+        ? [["24h", "24 h"], ["7d", "7 " + this._t("d")], ["30d", "30 " + this._t("d")], ["12m", this._t("m12")], ["custom", this._t("dates")]]
+        : [["6h", "6 h"], ["24h", "24 h"], ["48h", "48 h"], ["7d", "7 " + this._t("d")], ["custom", this._t("dates")]];
       this._r = o.defaultRange || (o.mode === "energy" ? "7d" : "24h");
       const t = new Date();
       this._from = isoDay(new Date(t - 6 * 864e5)); this._to = isoDay(t);
@@ -61,14 +216,14 @@ if (!customElements.get("holm-energy-chart-v1")) {
       this.shadowRoot.innerHTML = `<style>${HolmEnergyChart.css()}</style>
         <div class="bg" style="--ac:${o.color || "#0abfbf"};--out:${o.outColor || "#9b6fd6"}"><div class="dlg" role="dialog" aria-label="${escc(o.name)}">
           <div class="hd"><div class="ico"><ha-icon icon="${escc(o.icon || "mdi:flash")}"></ha-icon></div>
-            <div class="tt"><b>${escc(o.name)}</b><small>${escc(o.subtitle || (o.mode === "energy" ? "Consommation" : "Puissance"))}</small></div>
-            ${o.entity ? `<button class="det" title="Détails"><ha-icon icon="mdi:information-outline"></ha-icon></button>` : ""}
-            <button class="x" aria-label="Fermer"><ha-icon icon="mdi:close"></ha-icon></button></div>
+            <div class="tt"><b>${escc(o.name)}</b><small>${escc(o.subtitle || this._t(o.mode === "energy" ? "consumption" : "power"))}</small></div>
+            ${o.entity ? `<button class="det" title="${this._t("details")}"><ha-icon icon="mdi:information-outline"></ha-icon></button>` : ""}
+            <button class="x" aria-label="${this._t("close")}"><ha-icon icon="mdi:close"></ha-icon></button></div>
           <div class="rg">${this._ranges.map(([k, l]) => `<button data-r="${k}" class="${k === this._r ? "on" : ""}">${l}</button>`).join("")}</div>
-          <div class="cu" style="display:${this._r === "custom" ? "flex" : "none"}"><label>Du <input type="date" id="f" value="${this._from}" max="${isoDay(new Date())}"></label>
-            <label>au <input type="date" id="t" value="${this._to}" max="${isoDay(new Date())}"></label><button class="ok">Afficher</button></div>
+          <div class="cu" style="display:${this._r === "custom" ? "flex" : "none"}"><label>${this._t("from")} <input type="date" id="f" value="${this._from}" max="${isoDay(new Date())}"></label>
+            <label>${this._t("to")} <input type="date" id="t" value="${this._to}" max="${isoDay(new Date())}"></label><button class="ok">${this._t("show")}</button></div>
           <div class="stats" id="stats"></div>
-          <div class="ch" id="ch"><div class="ld">Chargement…</div></div>
+          <div class="ch" id="ch"><div class="ld">${this._t("loading")}</div></div>
           <div class="lg" id="lg"></div>
         </div></div>`;
       const r = this.shadowRoot;
@@ -110,7 +265,7 @@ if (!customElements.get("holm-energy-chart-v1")) {
       const o = this._o, { start, end } = this._span();
       const days = (end - start) / 864e5;
       const ch = this.shadowRoot.getElementById("ch");
-      if (ch) ch.innerHTML = `<div class="ld">Chargement…</div>`;
+      if (ch) ch.innerHTML = `<div class="ld">${this._t("loading")}</div>`;
       try {
         const eIds = [...new Set([...(o.energy || []), ...(o.energyNeg || []), ...(o.energyOut || [])].filter(Boolean))];
         let d;
@@ -138,7 +293,7 @@ if (!customElements.get("holm-energy-chart-v1")) {
         this._data = d;
         this._draw();
       } catch (e) {
-        if (seq === this._seq && ch) ch.innerHTML = `<div class="ld">Historique indisponible : ${escc(e && e.message ? e.message : e)}</div>`;
+        if (seq === this._seq && ch) ch.innerHTML = `<div class="ld">${this._t("hist_unavail")} : ${escc(e && e.message ? e.message : e)}</div>`;
       }
     }
     // série de puissance (W) : statistiques (5 min / heure) si dispo, sinon historique brut
@@ -172,14 +327,14 @@ if (!customElements.get("holm-energy-chart-v1")) {
       if (hrs <= 50) {
         const step = hrs <= 7 ? 1 : hrs <= 25 ? 3 : 6;
         const f = new Date(d.t0); f.setMinutes(0, 0, 0);
-        for (let t = +f; t <= d.t1; t += 3600e3) { const dt = new Date(t); if (t >= d.t0 && dt.getHours() % step === 0) out.push([t, dt.getHours() === 0 && hrs > 25 ? dt.toLocaleDateString("fr-FR", { weekday: "short" }) : dt.getHours() + "h"]); }
+        for (let t = +f; t <= d.t1; t += 3600e3) { const dt = new Date(t); if (t >= d.t0 && dt.getHours() % step === 0) out.push([t, dt.getHours() === 0 && hrs > 25 ? dt.toLocaleDateString(NUMLOC, { weekday: "short" }) : dt.getHours() + "h"]); }
       } else if (hrs <= 24 * 40) {
         const step = hrs <= 24 * 8 ? 1 : hrs <= 24 * 16 ? 2 : 5;
         for (let t = +day0(new Date(d.t0)), i = 0; t <= d.t1; t = +new Date(new Date(t).setDate(new Date(t).getDate() + 1)), i++) if (t >= d.t0 && i % step === 0)
-          out.push([t, new Date(t).toLocaleDateString("fr-FR", hrs <= 24 * 8 ? { weekday: "short", day: "numeric" } : { day: "numeric", month: "short" })]);
+          out.push([t, new Date(t).toLocaleDateString(NUMLOC, hrs <= 24 * 8 ? { weekday: "short", day: "numeric" } : { day: "numeric", month: "short" })]);
       } else {
         const s = new Date(d.t0); s.setDate(1); s.setHours(0, 0, 0, 0);
-        for (let m = new Date(s); +m <= d.t1; m.setMonth(m.getMonth() + 1)) if (+m >= d.t0 - 864e5) out.push([+m, m.toLocaleDateString("fr-FR", { month: "short" })]);
+        for (let m = new Date(s); +m <= d.t1; m.setMonth(m.getMonth() + 1)) if (+m >= d.t0 - 864e5) out.push([+m, m.toLocaleDateString(NUMLOC, { month: "short" })]);
       }
       return out;
     }
@@ -194,7 +349,7 @@ if (!customElements.get("holm-energy-chart-v1")) {
       const xs = this._xAxis(d, W, P);
       let svgBody = "", stats = "", legend = "", hover = null;
       if (d.kind === "bars") {
-        if (!d.bars.length) { ch.innerHTML = `<div class="ld">Aucune donnée sur cette période.</div>`; st.innerHTML = ""; lg.innerHTML = ""; return; }
+        if (!d.bars.length) { ch.innerHTML = `<div class="ld">${this._t("no_data")}</div>`; st.innerHTML = ""; lg.innerHTML = ""; return; }
         const step = { hour: 3600e3, day: 864e5, month: 30.4 * 864e5 }[d.period];
         const t1 = Math.max(d.t1, d.bars[d.bars.length - 1].t + step);
         d.t1 = t1;
@@ -211,22 +366,22 @@ if (!customElements.get("holm-energy-chart-v1")) {
           const yl = (v) => P.t + (1 - v / lmax) * (H - P.t - P.b);
           svgBody += `<path class="pw" d="M${d.line.map((p) => `${x(p.t).toFixed(1)} ${yl(p.v).toFixed(1)}`).join(" L")}"/>`;
           svgBody += [0, lmax / 2, lmax].map((v) => `<text class="yr" x="${W - P.r + 6}" y="${(yl(v) + 3.5).toFixed(1)}">${fW(v).replace(" ", "")}</text>`).join("");
-          legend += `<span><i class="lpw"></i>Puissance</span>`;
+          legend += `<span><i class="lpw"></i>${this._t("power")}</span>`;
         }
         const tot = d.bars.reduce((a, b) => a + b.v, 0);
-        const unit = { hour: "h", day: "jour", month: "mois" }[d.period];
-        const pkLbl = new Date(pk.t).toLocaleString("fr-FR", d.period === "hour" ? { weekday: "short", hour: "2-digit", minute: "2-digit" } : d.period === "day" ? { weekday: "short", day: "numeric", month: "short" } : { month: "long", year: "numeric" });
-        stats = `<div><small>Total</small><b>${fK(tot)}</b></div>${o.price > 0 ? `<div><small>Coût estimé</small><b>${frc(tot * o.price, 2)} €</b><em>à ${frc(o.price, 3)} €/kWh</em></div>` : ""}
-          <div><small>Moyenne / ${unit}</small><b>${fK(tot / d.bars.length)}</b></div><div><small>Pic</small><b>${fK(pk.v)}</b><em>${escc(pkLbl)}</em></div>`;
-        legend = `<span><i class="lbar"></i>Consommation par ${{ hour: "heure", day: "jour", month: "mois" }[d.period]}</span>` + legend;
+        const unit = this._t({ hour: "u_hour", day: "u_day", month: "u_month" }[d.period]);
+        const pkLbl = new Date(pk.t).toLocaleString(NUMLOC, d.period === "hour" ? { weekday: "short", hour: "2-digit", minute: "2-digit" } : d.period === "day" ? { weekday: "short", day: "numeric", month: "short" } : { month: "long", year: "numeric" });
+        stats = `<div><small>${this._t("total")}</small><b>${fK(tot)}</b></div>${o.price > 0 ? `<div><small>${this._t("est_cost")}</small><b>${frc(tot * o.price, 2)} €</b><em>${this._t("at_price", { p: frc(o.price, 3) })}</em></div>` : ""}
+          <div><small>${this._t("avg_per", { u: unit })}</small><b>${fK(tot / d.bars.length)}</b></div><div><small>${this._t("peak")}</small><b>${fK(pk.v)}</b><em>${escc(pkLbl)}</em></div>`;
+        legend = `<span><i class="lbar"></i>${this._t("cons_per", { u: this._t({ hour: "per_hour", day: "per_day", month: "per_month" }[d.period]) })}</span>` + legend;
         hover = (t) => {
           const b = d.bars.find((q) => t >= q.t && t < q.t + step); if (!b) return null;
-          const lbl = new Date(b.t).toLocaleString("fr-FR", d.period === "hour" ? { weekday: "short", hour: "2-digit", minute: "2-digit" } : d.period === "day" ? { weekday: "long", day: "numeric", month: "short" } : { month: "long", year: "numeric" });
+          const lbl = new Date(b.t).toLocaleString(NUMLOC, d.period === "hour" ? { weekday: "short", hour: "2-digit", minute: "2-digit" } : d.period === "day" ? { weekday: "long", day: "numeric", month: "short" } : { month: "long", year: "numeric" });
           return { px: x(b.t + step / 2), py: y(b.v), html: `<small>${escc(lbl)}</small><b>${fK(b.v)}</b>${o.price > 0 ? `<span>≈ ${frc(b.v * o.price, 2)} €</span>` : ""}` };
         };
       } else {
         const pts = d.pts;
-        if (!pts.length) { ch.innerHTML = `<div class="ld">Aucune donnée sur cette période.</div>`; st.innerHTML = ""; lg.innerHTML = ""; return; }
+        if (!pts.length) { ch.innerHTML = `<div class="ld">${this._t("no_data")}</div>`; st.innerHTML = ""; lg.innerHTML = ""; return; }
         const vals = pts.map((p) => p.v);
         let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
         hi = hi > 0 ? nice(hi * 1.08) : 0; lo = lo < 0 ? -nice(-lo * 1.08) : 0;
@@ -256,19 +411,19 @@ if (!customElements.get("holm-energy-chart-v1")) {
         const mn = Math.min(...pts.map((p) => (p.lo !== undefined && !isNaN(p.lo) ? p.lo : p.v)));
         const eIn = !isNaN(d.eIn) ? d.eIn : pos / 1000, eOut = !isNaN(d.eOut) ? d.eOut : neg / 1000;
         if (o.signed) {
-          stats = `<div><small>Actuel</small><b>${curW < 0 ? "↑ " : curW > 0 ? "↓ " : ""}${fW(Math.abs(curW))}</b></div><div><small>Pic d'achat</small><b>${fW(Math.max(0, mx))}</b></div>
-            ${mn < 0 ? `<div><small>Pic de revente</small><b>${fW(-mn)}</b></div>` : ""}<div class="in"><small>Acheté</small><b>${fK(eIn)}</b></div><div class="out"><small>Revendu</small><b>${fK(eOut)}</b></div>`;
-          legend = `<span><i class="lin"></i>Achat au réseau</span><span><i class="lout"></i>Revente</span>`;
+          stats = `<div><small>${this._t("current")}</small><b>${curW < 0 ? "↑ " : curW > 0 ? "↓ " : ""}${fW(Math.abs(curW))}</b></div><div><small>${this._t("buy_peak")}</small><b>${fW(Math.max(0, mx))}</b></div>
+            ${mn < 0 ? `<div><small>${this._t("sell_peak")}</small><b>${fW(-mn)}</b></div>` : ""}<div class="in"><small>${this._t("bought")}</small><b>${fK(eIn)}</b></div><div class="out"><small>${this._t("sold")}</small><b>${fK(eOut)}</b></div>`;
+          legend = `<span><i class="lin"></i>${this._t("grid_buy")}</span><span><i class="lout"></i>${this._t("resale")}</span>`;
         } else {
-          stats = `<div><small>Actuel</small><b>${fW(curW)}</b></div><div><small>Min</small><b>${fW(Math.max(0, mn))}</b></div><div><small>Max</small><b>${fW(mx)}</b></div>
-            <div><small>Moyenne</small><b>${fW(tw ? wsum / tw : 0)}</b></div><div><small>Énergie</small><b>${fK(eIn)}</b></div>`;
-          legend = `<span><i class="lin"></i>Puissance${isStat ? " (moyenne)" : ""}</span>`;
+          stats = `<div><small>${this._t("current")}</small><b>${fW(curW)}</b></div><div><small>${this._t("min")}</small><b>${fW(Math.max(0, mn))}</b></div><div><small>${this._t("max")}</small><b>${fW(mx)}</b></div>
+            <div><small>${this._t("average")}</small><b>${fW(tw ? wsum / tw : 0)}</b></div><div><small>${this._t("energy")}</small><b>${fK(eIn)}</b></div>`;
+          legend = `<span><i class="lin"></i>${this._t("power")}${isStat ? this._t("avg_suffix") : ""}</span>`;
         }
         hover = (t) => {
           let p = null, pi = 0; for (let i = 0; i < pts.length; i++) { if (pts[i].t <= t) { p = pts[i]; pi = i; } else break; }
           if (!p) p = pts[0];
-          const lbl = new Date(t).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" });
-          const v = p.v, extra = isStat && !isNaN(p.lo) && step ? `<span>min ${fW(p.lo)} · max ${fW(p.hi)}</span>` : "";
+          const lbl = new Date(t).toLocaleString(NUMLOC, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+          const v = p.v, extra = isStat && !isNaN(p.lo) && step ? `<span>${this._t("min").toLowerCase()} ${fW(p.lo)} · ${this._t("max").toLowerCase()} ${fW(p.hi)}</span>` : "";
           return { px: x(t), py: y(v), html: `<small>${escc(lbl)}</small><b>${o.signed ? (v < 0 ? "↑ revente " : "↓ achat ") : ""}${fW(Math.abs(v))}</b>${extra}` };
         };
       }
@@ -341,22 +496,22 @@ if (!customElements.get("holm-energy-chart-v1")) {
       @media (max-width:480px) { .bg { padding:8px; align-items:flex-end; } .dlg { border-radius:22px 22px 14px 14px; padding:12px; } }`;
     }
   }
-  customElements.define("holm-energy-chart-v1", HolmEnergyChart);
+  customElements.define("holm-energy-chart-v1b", HolmEnergyChart);
 }
 const openEnergyChart = (hass, o) => {
-  let dlg = document.querySelector("holm-energy-chart-v1");
-  if (!dlg) { dlg = document.createElement("holm-energy-chart-v1"); document.body.appendChild(dlg); }
+  let dlg = document.querySelector("holm-energy-chart-v1b");
+  if (!dlg) { dlg = document.createElement("holm-energy-chart-v1b"); document.body.appendChild(dlg); }
   dlg.open(hass, o);
 };
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fr = (v, d = 1) => Number(v).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fr = (v, d = 1) => Number(v).toLocaleString(NUMLOC, { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtW = (w) => (Math.abs(w) >= 1000 ? [fr(w / 1000, Math.abs(w) >= 10000 ? 1 : 2), "kW"] : [fr(w, 0), "W"]);
 const DEF = { solar_color: "#e3a21a", home_color: "#0abfbf", grid_color: "#4a90d9", grid_hp_color: "#e2702a", export_color: "#9b6fd6" };
 const ICONS = [
-  [/chauffe.?eau|ballon/i, "mdi:water-boiler"], [/clim/i, "mdi:snowflake"], [/chauffage|radiateur/i, "mdi:radiator"],
-  [/s[eè]che.?serviette/i, "mdi:heating-coil"], [/volet/i, "mdi:window-shutter"], [/frigo|r[ée]frig/i, "mdi:fridge-outline"],
-  [/lave.?linge/i, "mdi:washing-machine"], [/lave.?vais/i, "mdi:dishwasher"], [/s[eè]che.?linge/i, "mdi:tumble-dryer"],
+  [/chauffe.?eau|ballon|water.?heater|boiler/i, "mdi:water-boiler"], [/clim|air.?con/i, "mdi:snowflake"], [/chauffage|radiateur|heater|heating/i, "mdi:radiator"],
+  [/s[eè]che.?serviette/i, "mdi:heating-coil"], [/volet/i, "mdi:window-shutter"], [/frigo|r[ée]frig|fridge/i, "mdi:fridge-outline"],
+  [/lave.?linge|washing|washer/i, "mdi:washing-machine"], [/lave.?vais|dishwasher/i, "mdi:dishwasher"], [/s[eè]che.?linge|dryer/i, "mdi:tumble-dryer"],
   [/tv|t[ée]l[ée]/i, "mdi:television"], [/spa/i, "mdi:hot-tub"], [/vid[ée]oproj/i, "mdi:projector"], [/robot|tondeuse/i, "mdi:robot-mower"],
   [/friteuse/i, "mdi:pot-steam"], [/serre/i, "mdi:greenhouse"], [/d[ée]shumid/i, "mdi:air-humidifier"], [/local tech|serveur|nas/i, "mdi:server"],
   [/multiprise/i, "mdi:power-plug-outline"], [/bureau/i, "mdi:desk"], [/cuisson|four|plaque/i, "mdi:stove"], [/prise/i, "mdi:power-socket-eu"],
@@ -373,7 +528,7 @@ class HolmPowerFlowCard extends HTMLElement {
     if (this._src) this._build(); else if (this._hass && !this._inited) this._init();
   }
   set hass(h) {
-    this._hass = h;
+    this._hass = h; this._lang = setLoc(h, this._c);
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
     if (!this._inited) this._init(); else this._update();
   }
@@ -426,24 +581,26 @@ class HolmPowerFlowCard extends HTMLElement {
       this._update(true);
     } catch (e) { /* totaux facultatifs */ }
   }
+  _t(k, v) { return tr(this._lang || langOf(this._hass, this._c), k, v); }
   _chart(k, dev) {
     const c = this._c, s = this._src || {}, v = this._values();
     const col = { solar: c.solar_color || DEF.solar_color, home: c.home_color || DEF.home_color, grid: this._gridColor() };
     let o;
     if (dev) {
       const name = dev.name || this._hass.states[dev.entity]?.attributes.friendly_name || dev.entity;
-      o = { name, subtitle: "Puissance de l'appareil", icon: dev.icon || iconFor(name), color: dev.color || col.home, power: dev.entity, entity: dev.entity, energy: s.devE[dev.entity] ? [s.devE[dev.entity]] : [] };
+      o = { name, subtitle: this._t("device_power"), icon: dev.icon || iconFor(name), color: dev.color || col.home, power: dev.entity, entity: dev.entity, energy: s.devE[dev.entity] ? [s.devE[dev.entity]] : [] };
     } else if (k === "solar") {
-      o = { name: "Solaire", subtitle: "Production", icon: "mdi:solar-power-variant", color: col.solar, power: this._ent("solar"), entity: this._ent("solar"), energy: s.solarEs };
+      o = { name: this._t("solar"), subtitle: this._t("production"), icon: "mdi:solar-power-variant", color: col.solar, power: this._ent("solar"), entity: this._ent("solar"), energy: s.solarEs };
     } else if (k === "grid") {
-      o = { name: "Réseau", subtitle: "Achat et revente", icon: "mdi:transmission-tower", color: c.grid_color || DEF.grid_color, outColor: c.export_color || DEF.export_color,
+      o = { name: this._t("grid"), subtitle: this._t("buy_sell"), icon: "mdi:transmission-tower", color: c.grid_color || DEF.grid_color, outColor: c.export_color || DEF.export_color,
         power: this._ent("grid"), entity: this._ent("grid"), signed: true, energy: s.gIn, energyOut: s.gOut };
     } else {
       const pw = c.home_power ? c.home_power : [this._ent("solar"), this._ent("grid")].filter(Boolean);
-      o = { name: "Maison", subtitle: "Consommation", icon: "mdi:home-lightning-bolt", color: col.home, power: pw, entity: c.home_power || null, current: v.home,
+      o = { name: this._t("home"), subtitle: this._t("consumption"), icon: "mdi:home-lightning-bolt", color: col.home, power: pw, entity: c.home_power || null, current: v.home,
         energy: [...s.gIn, ...s.solarEs], energyNeg: s.gOut };
     }
     if (!o.power || (Array.isArray(o.power) && !o.power.length)) return o.entity && this._more(o.entity);
+    o.lang = this._lang; setLoc(this._hass, this._c);
     openEnergyChart(this._hass, o);
   }
   _ent(k) {
@@ -507,7 +664,7 @@ class HolmPowerFlowCard extends HTMLElement {
     if (!t || !t.next || this._c.show_countdown === false) return "";
     const now = new Date(), min = Math.max(0, Math.round((t.next - now) / 60000));
     const dur = min >= 60 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")}` : `${min} min`;
-    return `${t.isHC ? "HP" : "HC"} dans ${dur}`;
+    return this._t("in_dur", { p: this._t(t.isHC ? "hp" : "hc"), d: dur });
   }
   _gridColor() {
     const c = this._c, t = this._tariff();
@@ -618,14 +775,14 @@ class HolmPowerFlowCard extends HTMLElement {
     const w = (x, pre = "") => { const [a, u] = fmtW(x); return `${pre}${a}<small>${u}</small>`; };
     set("vS", w(v.solar));
     const se = e("solarE") ? this._n(e("solarE")) : NaN;
-    set("sS", this._label("solar_label", isNaN(se) || (c.show_totals !== false && this._tot && !isNaN(this._tot.sol)) ? "Solaire" : `${fr(se, 1)} kWh auj.`));
+    set("sS", this._label("solar_label", isNaN(se) || (c.show_totals !== false && this._tot && !isNaN(this._tot.sol)) ? this._t("solar") : this._t("kwh_today", { x: fr(se, 1) })));
     set("vH", w(v.home));
-    set("sH", this._label("home_label", v.home > 0 ? `${fr(v.share * 100, 0)} % solaire` : "Maison"));
+    set("sH", this._label("home_label", v.home > 0 ? this._t("pct_solar", { x: fr(v.share * 100, 0) }) : this._t("home")));
     if (v.exp > v.th) set("vG", w(v.exp, `<span class="ar">↑</span>${v.est ? "≈" : ""}`));
     else set("vG", w(v.imp, v.imp > v.th ? `<span class="ar">↓</span>` : ""));
     const T0 = this._tar, tv = T0 ? T0.price : NaN, long = c.tariff_display === "label" || c.tariff_display === "both";
-    const per = T0 ? (long ? (T0.isHC ? "Heures creuses" : "Heures pleines") : (T0.isHC ? "HC" : "HP")) : "";
-    set("sG", this._label("grid_label", v.exp > v.th ? "Revente" : T0 ? `${per}${!isNaN(tv) ? ` · ${fr(tv, 4)} €` : ""}` : "Réseau"));
+    const per = T0 ? this._t(long ? (T0.isHC ? "hc_long" : "hp_long") : (T0.isHC ? "hc" : "hp")) : "";
+    set("sG", this._label("grid_label", v.exp > v.th ? this._t("resale") : T0 ? `${per}${!isNaN(tv) ? ` · ${fr(tv, 4)} €` : ""}` : this._t("grid")));
     { const sg = sr.getElementById("sG"); if (sg) sg.title = sg.textContent; }
     const cdEl = sr.getElementById("cG");
     if (cdEl) { const cd = this._countdown(T0); if (cdEl.textContent !== cd) cdEl.textContent = cd;
@@ -676,14 +833,6 @@ class HolmPowerFlowCard extends HTMLElement {
 }
 
 // ---------------- Éditeur visuel ----------------
-const L = { show_totals: "Totaux du jour sous les icônes", title: "Titre (optionnel)", show_frame: "Afficher le cadre de la carte", threshold: "Seuil d'activité (W)", curve_factor: "Courbure des lignes (0 = droites)",
-  solar_power: "Puissance solaire (vide = tableau Énergie)", grid_power: "Puissance réseau (vide = tableau Énergie)", export_power: "Puissance revendue (vide = estimée)",
-  home_power: "Puissance maison (vide = calculée)", export_energy: "Énergie revendue pour l'estimation (vide = tableau Énergie)",
-  solar_label: "Info sous Solaire (vide = production du jour)", home_label: "Info sous Maison (vide = part solaire)", grid_label: "Info sous Réseau (vide = tarif HC/HP)",
-  tariff_display: "Heures creuses / pleines", show_countdown: "Décompte jusqu'au prochain changement HC / HP", hc_entity: "Heures creuses HOLM HP/HC (vide = détection automatique)",
-  tariff_entity: "Ancienne méthode : tarif actuel (prioritaire si renseigné)", hc_price: "Prix HC (nombre, pour reconnaître les heures creuses)", hc_price_entity: "… ou entité contenant le prix HC",
-  show_devices: "Afficher les appareils actifs", show_device_names: "Afficher le nom des appareils", max_devices: "Nombre max d'appareils", device_threshold: "Seuil appareil (W)",
-  solar_color: "Couleur solaire", home_color: "Couleur maison / appareils", grid_color: "Couleur réseau (HC)", grid_hp_color: "Couleur réseau (HP)", export_color: "Couleur revente" };
 const hex2rgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return undefined; const n = parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const rgb2hex = (a) => Array.isArray(a) ? "#" + a.map((v) => Number(v).toString(16).padStart(2, "0")).join("") : a;
 const S = ["sensor"], ANY = ["sensor", "input_number", "number"];
@@ -696,39 +845,46 @@ const SCHEMA = [
     { name: "show_frame", selector: { boolean: {} } },
   ] },
   { name: "show_totals", selector: { boolean: {} } },
-  { type: "expandable", title: "Capteurs", icon: "mdi:flash", flatten: true, schema: [
+  { type: "expandable", title: "sec_sensors", icon: "mdi:flash", flatten: true, schema: [
     { name: "solar_power", selector: { entity: { domain: S } } }, { name: "grid_power", selector: { entity: { domain: S } } },
     { name: "export_power", selector: { entity: { domain: S } } }, { name: "home_power", selector: { entity: { domain: S } } },
     { name: "export_energy", selector: { entity: { domain: S } } },
   ] },
-  { type: "expandable", title: "Infos sous les icônes", icon: "mdi:label-outline", flatten: true, schema: [
+  { type: "expandable", title: "sec_labels", icon: "mdi:label-outline", flatten: true, schema: [
     { name: "solar_label", selector: { entity: {} } }, { name: "home_label", selector: { entity: {} } }, { name: "grid_label", selector: { entity: {} } },
-    { name: "tariff_display", selector: { select: { mode: "dropdown", options: [{ value: "color", label: "Couleur du réseau (HC / HP)" }, { value: "label", label: "Repère « Heures creuses » / « Heures pleines »" }, { value: "both", label: "Couleur et repère" }] } } },
+    { name: "tariff_display", selector: { select: { mode: "dropdown", options: [{ value: "color", label: "td_color" }, { value: "label", label: "td_label" }, { value: "both", label: "td_both" }] } } },
     { name: "show_countdown", selector: { boolean: {} } },
     { name: "hc_entity", selector: { entity: { domain: ["binary_sensor"] } } },
     { name: "tariff_entity", selector: { entity: { domain: ANY } } },
     { type: "grid", name: "", schema: [ { name: "hc_price", selector: { number: { min: 0, max: 2, step: 0.0001, mode: "box" } } }, { name: "hc_price_entity", selector: { entity: { domain: ANY } } } ] },
   ] },
-  { type: "expandable", title: "Appareils actifs", icon: "mdi:power-plug", flatten: true, schema: [
+  { type: "expandable", title: "sec_devices", icon: "mdi:power-plug", flatten: true, schema: [
     { type: "grid", name: "", schema: [
       { name: "show_devices", selector: { boolean: {} } }, { name: "show_device_names", selector: { boolean: {} } },
       { name: "max_devices", selector: { number: { min: 1, max: 30, mode: "box" } } }, { name: "device_threshold", selector: { number: { min: 0, max: 1000, mode: "box", unit_of_measurement: "W" } } },
     ] },
   ] },
-  { type: "expandable", title: "Couleurs", icon: "mdi:palette", flatten: true, schema: [ { type: "grid", name: "", schema: COLORS.map((n) => ({ name: n, selector: { color_rgb: {} } })) } ] },
+  { type: "expandable", title: "sec_colors", icon: "mdi:palette", flatten: true, schema: [ { type: "grid", name: "", schema: COLORS.map((n) => ({ name: n, selector: { color_rgb: {} } })) } ] },
+  { name: "language", selector: { select: { mode: "dropdown", options: [{ value: "", label: "auto" }, ...Object.entries(LANG_NAMES).map(([value, label]) => ({ value, label }))] } } },
 ];
+// libellés du schéma traduits (titres de sections, options) — les noms de LANG_NAMES restent tels quels
+const localize = (sc, l) => sc.map((x) => { const o = { ...x }; if (o.title) o.title = tr(l, o.title); if (o.schema) o.schema = localize(o.schema, l);
+  if (o.selector?.select && o.name !== "language") o.selector = { select: { ...o.selector.select, options: o.selector.select.options.map((op) => ({ ...op, label: tr(l, op.label) })) } };
+  if (o.name === "language") o.selector = { select: { ...o.selector.select, options: o.selector.select.options.map((op) => (op.value ? op : { ...op, label: tr(l, "auto") })) } };
+  return o; });
 const DEFAULTS = { tariff_display: "color", show_countdown: true, show_totals: true, threshold: 20, curve_factor: 1, show_devices: true, max_devices: 10, device_threshold: 15, show_device_names: false, show_frame: true };
 class HolmPowerFlowCardEditor extends HTMLElement {
   setConfig(c) { const j = JSON.stringify(c); this._config = JSON.parse(j); if (j === this._last && this._f) return; this._build(); }
   set hass(h) { this._hass = h; if (!this._f) this._build(); else this._f.hass = h; }
   _build() {
     if (!this._hass || !this._config) return;
-    const c = this._config, data = { ...DEFAULTS, ...c };
+    const c = this._config, data = { ...DEFAULTS, ...c }, l = langOf(this._hass, c);
+    data.language = c.language || "";
     for (const k of COLORS) data[k] = hex2rgb(c[k] || DEF[k]);
     if (typeof c.hc_price === "string" && isNaN(Number(c.hc_price))) { data.hc_price_entity = c.hc_price; delete data.hc_price; }
     this.innerHTML = "";
     const f = (this._f = document.createElement("ha-form"));
-    f.hass = this._hass; f.schema = SCHEMA; f.data = data; f.computeLabel = (s) => L[s.name] || s.name;
+    f.hass = this._hass; f.schema = localize(SCHEMA, l); f.data = data; f.computeLabel = (s) => tr(l, "l_" + s.name);
     f.addEventListener("value-changed", (ev) => {
       ev.stopPropagation();
       const v = ev.detail.value, o = { ...this._config };
@@ -738,7 +894,9 @@ class HolmPowerFlowCardEditor extends HTMLElement {
         if (k === "hc_price" && (val === "" || val == null) && typeof o.hc_price === "string") continue;
         if (val === "" || val === undefined || val === null || DEFAULTS[k] === val) delete o[k]; else o[k] = val;
       }
+      const relang = (o.language || "") !== (this._config.language || "");
       this._config = o; this._last = JSON.stringify(o);
+      if (relang) setTimeout(() => this._build());
       this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: o }, bubbles: true, composed: true }));
     });
     this.appendChild(f);
@@ -747,6 +905,6 @@ class HolmPowerFlowCardEditor extends HTMLElement {
 if (!customElements.get("holm-power-flow-card-editor")) customElements.define("holm-power-flow-card-editor", HolmPowerFlowCardEditor);
 if (!customElements.get("holm-power-flow-card")) customElements.define("holm-power-flow-card", HolmPowerFlowCard);
 window.customCards = window.customCards || [];
-window.customCards.push({ type: "holm-power-flow-card", name: "HOLM – Flux de puissance compact", description: "Solaire → Maison ⇄ Réseau en temps réel, totaux du jour et graphiques au toucher, avec les appareils actifs", preview: false });
+{ const l = langOf(document.querySelector("home-assistant")?.hass); window.customCards.push({ type: "holm-power-flow-card", name: tr(l, "card_name"), description: tr(l, "card_desc"), preview: false }); }
 console.info(`%c HOLM-POWER-FLOW %c ${VERSION} `, "background:#e3a21a;color:#111;border-radius:3px 0 0 3px", "background:#123;color:#fff;border-radius:0 3px 3px 0");
 })();

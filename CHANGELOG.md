@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+- **8 langues** : français, anglais, allemand, espagnol, italien, néerlandais, portugais et polonais, pour la carte, ses graphiques et l'éditeur visuel. La carte suit la langue du profil Home Assistant (anglais si la langue n'est pas traduite) ; nouvelle option `language`, aussi réglable dans l'éditeur. Les nombres et les dates suivent la langue.
+- Icônes automatiques des appareils : reconnaissance des noms anglais en plus (water heater, washing machine, dishwasher, dryer, fridge, heater…).
+- README en anglais (`README.en.md`).
+
 ## 1.2.0
 - **Heures creuses / pleines via HOLM HP/HC** (#3) : l'intégration est détectée automatiquement (`binary_sensor.heures_creuses`, ou option `hc_entity`) ; période et prix du kWh en cours sans rien configurer.
 - **Décompte** sous le réseau jusqu'au prochain changement : « HC dans 1 h 54 » (option `show_countdown`).
