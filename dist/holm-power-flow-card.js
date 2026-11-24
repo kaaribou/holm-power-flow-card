@@ -686,7 +686,10 @@ class HolmPowerFlowCard extends HTMLElement {
     const batHome = Math.max(0, bd - Math.max(0, exp - solar));  // décharge qui alimente la maison
     const share = home > 0 ? Math.min(1, selfUse / home) : solar > 0 ? 1 : 0;
     const shareB = home > 0 ? Math.min(1 - share, batHome / home) : 0;
-    return { solar, imp, exp, home, selfUse, share, shareB, est, th, b, bd, bc, soc };
+    const gridChg = Math.min(imp, Math.max(0, bc - solar));      // charge de la batterie alimentée par le réseau
+    const solChg = Math.max(0, bc - gridChg);                    // charge d'origine solaire
+    const direct = Math.max(0, solar - solChg);                  // solaire qui part directement vers la maison / le réseau
+    return { solar, imp, exp, home, selfUse, share, shareB, est, th, b, bd, bc, soc, gridChg, solChg, direct };
   }
   // ---- HOLM HP/HC : binary_sensor des heures creuses (attributs prochaine_bascule, tarif) ----
   _hcEnt() {
@@ -740,7 +743,7 @@ class HolmPowerFlowCard extends HTMLElement {
     // chemins : solaire → maison (direct ou arc), solaire → batterie, batterie → maison, réseau → maison (import), maison → réseau (export)
     const pSH = hasBat ? `M${xs},${cy - r - 2} C${xs},${cy - r - 18} ${xh},${cy - r - 18} ${xh},${cy - r - 2}`
       : `M${xs + r + 4},${cy} C${xs + r + 4 + (xh - xs) * 0.35},${cy + sag} ${xh - r - 4 - (xh - xs) * 0.35},${cy + sag} ${xh - r - 4},${cy}`;
-    const pSB = cv(xs + r + 4, xb - r - 4), pBH = cv(xb + r + 4, xh - r - 4);
+    const pSB = cv(xs + r + 4, xb - r - 4), pBH = cv(xb + r + 4, xh - r - 4), pHB = cv(xh - r - 4, xb + r + 4);
     const pGH = `M${xg - r - 4},${cy} C${xg - r - 4 - (xg - xh) * 0.35},${cy + sag} ${xh + r + 4 + (xg - xh) * 0.35},${cy + sag} ${xh + r + 4},${cy}`;
     const pHG = `M${xh + r + 4},${cy} C${xh + r + 4 + (xg - xh) * 0.35},${cy + sag} ${xg - r - 4 - (xg - xh) * 0.35},${cy + sag} ${xg - r - 4},${cy}`;
     const dots = (cls, path, color) => [0, 1, 2].map((i) => `<circle r="3" class="dot ${cls}" style="offset-path:path('${path}');fill:${color};--i:${i}"/>`).join("");
@@ -765,6 +768,9 @@ class HolmPowerFlowCard extends HTMLElement {
       .ic ha-icon { --mdc-icon-size:22px; }
       .node.on .ic { box-shadow:0 0 14px color-mix(in srgb, var(--c) 45%, transparent); }
       .node.off .ic { opacity:.45; }
+      .node.bat.chg .ic { animation:pulse 1.8s ease-in-out infinite; }
+      .node.bat.dis .ic { animation:pulse 2.8s ease-in-out infinite; }
+      @keyframes pulse { 0%, 100% { box-shadow:0 0 6px color-mix(in srgb, var(--c) 30%, transparent); } 50% { box-shadow:0 0 20px 3px color-mix(in srgb, var(--c) 65%, transparent); } }
       .home .ic { border:none; background:none; }
       .home .ring { position:absolute; inset:0; border-radius:50%; background:conic-gradient(var(--rs) 0 var(--p), var(--rb, transparent) var(--p) var(--p2, var(--p)), var(--rg) var(--p2, var(--p)) 100%);
             -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask:radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); transition:background .6s; }
@@ -796,7 +802,7 @@ class HolmPowerFlowCard extends HTMLElement {
           <path id="lSH" class="ln" d="${pSH}" stroke="${col.s}"/><path id="lGH" class="ln" d="${pGH}"/>
           ${hasBat ? `<path id="lSB" class="ln" d="${pSB}" stroke="${col.s}"/><path id="lBH" class="ln" d="${pBH}" stroke="${col.b}"/>` : ""}
           ${dots("dSH", pSH, col.s)}${dots("dGH", pGH, "var(--gc)")}${dots("dHG", pHG, col.e)}
-          ${hasBat ? dots("dSB", pSB, col.s) + dots("dBH", pBH, col.b) : ""}
+          ${hasBat ? dots("dSB", pSB, col.s) + dots("dBH", pBH, col.b) + dots("dHB", pHB, "var(--gc)") : ""}
         </svg>
         <div class="node solar" data-e="solar" style="left:${xs}px;--c:${col.s}"><div class="ic"><ha-icon icon="mdi:solar-power-variant"></ha-icon></div><div class="v" id="vS"></div><div class="s" id="sS"></div><div class="k" id="kS"></div></div>
         ${hasBat ? `<div class="node bat" data-e="bat" style="left:${xb}px;--c:${col.b}"><div class="ic"><ha-icon icon="mdi:battery"></ha-icon></div><div class="v" id="vB"></div><div class="s" id="sB"></div><div class="k" id="kB"></div></div>` : ""}
@@ -864,11 +870,11 @@ class HolmPowerFlowCard extends HTMLElement {
     ring.style.setProperty("--p2", `${Math.round((v.share + v.shareB) * 100)}%`);
     if (v.home <= v.th) { ring.style.setProperty("--rs", "rgba(127,127,127,.3)"); ring.style.setProperty("--rg", "rgba(127,127,127,.3)"); ring.style.setProperty("--rb", "rgba(127,127,127,.3)"); }
     // nœuds allumés / éteints
-    sr.querySelector(".solar").className = `node solar ${v.solar > v.th ? "on" : "off"}`;
+    sr.querySelector(".solar").className = `node solar ${v.solar > v.th || v.solChg > v.th ? "on" : "off"}`;
     sr.querySelector(".grid").className = `node grid ${v.imp > v.th || v.exp > v.th ? "on" : "off"}`;
     sr.querySelector(".home").className = `node home ${v.home > v.th ? "on" : ""}`;
     // lignes & points
-    sr.getElementById("lSH").classList.toggle("on", v.solar > v.th);
+    sr.getElementById("lSH").classList.toggle("on", v.direct > v.th);
     const lGH = sr.getElementById("lGH"); lGH.classList.toggle("on", v.imp > v.th || v.exp > v.th);
     lGH.setAttribute("stroke", v.exp > v.th ? c.export_color || DEF.export_color : gc);
     const run = (cls, watts) => {
@@ -876,7 +882,7 @@ class HolmPowerFlowCard extends HTMLElement {
       if (this._lv[cls] === L) return; this._lv[cls] = L;
       sr.querySelectorAll("." + cls).forEach((d) => { d.classList.toggle("run", L > 0); if (L) d.style.setProperty("--d", DUR[L] + "s"); });
     };
-    run("dSH", v.solar); run("dGH", v.imp); run("dHG", v.exp);
+    run("dSH", v.direct); run("dGH", v.imp); run("dHG", v.exp);
     // batterie : ↓ = décharge (fournit), ↑ = charge (reçoit), comme pour le réseau
     if (this._hasBat) {
       const lvl = isNaN(v.soc) ? null : Math.round(v.soc / 10) * 10, chg = v.bc > v.th;
@@ -885,10 +891,12 @@ class HolmPowerFlowCard extends HTMLElement {
       set("vB", chg ? w(v.bc, `<span class="ar">↑</span>`) : v.bd > v.th ? w(v.bd, `<span class="ar">↓</span>`) : w(0));
       set("sB", isNaN(v.soc) ? this._t("battery") : `${fr(v.soc, 0)} %`);
       set("kB", T && !isNaN(T.bout) ? `<span class="in">↓</span>${kv(T.bout)} <span class="out">↑</span>${kv(T.bin)} kWh` : "");
-      sr.querySelector(".bat").className = `node bat ${chg || v.bd > v.th ? "on" : "off"}`;
-      sr.getElementById("lSB").classList.toggle("on", chg && v.solar > v.th);
-      sr.getElementById("lBH").classList.toggle("on", v.bd > v.th);
-      run("dSB", Math.min(v.bc, v.solar)); run("dBH", v.bd);
+      sr.querySelector(".bat").className = `node bat ${chg ? "on chg" : v.bd > v.th ? "on dis" : "off"}`;
+      sr.getElementById("lSB").classList.toggle("on", v.solChg > v.th);
+      const gChg = v.gridChg > v.th, dis = v.bd > v.th;
+      const lBH = sr.getElementById("lBH"); lBH.classList.toggle("on", dis || gChg);
+      lBH.setAttribute("stroke", gChg && !dis ? gc : c.battery_color || DEF.battery_color); // couleur réseau quand la charge vient du réseau
+      run("dSB", v.solChg); run("dBH", v.bd); run("dHB", gChg ? v.gridChg : 0);
     }
     // appareils actifs
     if (c.show_devices !== false) {
