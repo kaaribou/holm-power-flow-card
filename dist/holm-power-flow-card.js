@@ -1,19 +1,21 @@
-/* HOLM Power Flow Card — flux de puissance compact et horizontal : Solaire → Maison ⇄ Réseau, + appareils actifs.
+/* HOLM Power Flow Card — flux de puissance compact et horizontal : Solaire → (Batterie) → Maison ⇄ Réseau, + appareils actifs.
  * Les capteurs sont lus automatiquement dans le tableau de bord Énergie de Home Assistant (modifiables dans l'éditeur).
  *   type: custom:holm-power-flow-card
  *   solar_power / grid_power (W, négatif = injection accepté) / export_power / home_power / export_energy
+ *   battery_power (W, + = décharge, − = charge ; vide = tableau Énergie), battery_soc (%), battery_invert (inverse le signe), battery_color
+ *   La batterie n'apparaît que si un capteur de puissance batterie est configuré ou trouvé dans le tableau Énergie
  *   solar_label / home_label / grid_label : entité affichée sous chaque nœud
  *   HOLM HP/HC détecté automatiquement (binary_sensor.heures_creuses) : période HC / HP, tarif en cours, décompte
  *   tariff_display: color | label | both, show_countdown, hc_entity (sinon trouvé automatiquement)
  *   tariff_entity + hc_price (nombre ou entité) : ancienne méthode, prioritaire si configurée
  *   threshold, curve_factor, show_frame, show_devices, show_device_names, max_devices, device_threshold, devices
- *   show_totals : totaux du jour sous les icônes (acheté / revendu, produit, consommé)
+ *   show_totals : totaux du jour sous les icônes (acheté / revendu, produit, consommé, batterie)
  *   Un toucher sur une icône ou un appareil ouvre son graphique (6 h, 24 h, 48 h, 7 j ou dates au choix)
- *   solar_color / home_color / grid_color / grid_hp_color / export_color
+ *   solar_color / home_color / grid_color / grid_hp_color / export_color / battery_color
  * https://github.com/kaaribou/holm-power-flow-card — licence MIT
  */
 (() => {
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 // ---- traductions (fr, en, de, es, it, nl, pt, pl) ----
 const I18N = {
   fr: { d: "j", m12: "12 mois", dates: "Dates…", consumption: "Consommation", power: "Puissance", details: "Détails", close: "Fermer", from: "Du", to: "au", show: "Afficher",
@@ -23,6 +25,9 @@ const I18N = {
     min: "Min", max: "Max", average: "Moyenne", energy: "Énergie", avg_suffix: " (moyenne)",
     device_power: "Puissance de l'appareil", solar: "Solaire", production: "Production", grid: "Réseau", buy_sell: "Achat et revente", home: "Maison",
     in_dur: "{p} dans {d}", hc: "HC", hp: "HP", hc_long: "Heures creuses", hp_long: "Heures pleines", kwh_today: "{x} kWh auj.", pct_solar: "{x} % solaire",
+    battery: "Batterie", battery_sub: "Charge et décharge", bat_dis: "Décharge", bat_chg: "Charge", bat_dis_peak: "Pic de décharge", bat_chg_peak: "Pic de charge",
+    sec_battery: "Batterie", l_battery_power: "Puissance batterie (vide = tableau Énergie ; + = décharge)", l_battery_soc: "Niveau de charge (%)",
+    l_battery_invert: "Inverser le signe (+ = charge)", l_battery_color: "Couleur batterie",
     l_show_totals: "Totaux du jour sous les icônes", l_title: "Titre (optionnel)", l_show_frame: "Afficher le cadre de la carte", l_threshold: "Seuil d'activité (W)", l_curve_factor: "Courbure des lignes (0 = droites)",
     l_solar_power: "Puissance solaire (vide = tableau Énergie)", l_grid_power: "Puissance réseau (vide = tableau Énergie)", l_export_power: "Puissance revendue (vide = estimée)",
     l_home_power: "Puissance maison (vide = calculée)", l_export_energy: "Énergie revendue pour l'estimation (vide = tableau Énergie)",
@@ -41,6 +46,9 @@ const I18N = {
     min: "Min", max: "Max", average: "Average", energy: "Energy", avg_suffix: " (average)",
     device_power: "Device power", solar: "Solar", production: "Production", grid: "Grid", buy_sell: "Import and export", home: "Home",
     in_dur: "{p} in {d}", hc: "Off-peak", hp: "Peak", hc_long: "Off-peak hours", hp_long: "Peak hours", kwh_today: "{x} kWh today", pct_solar: "{x}% solar",
+    battery: "Battery", battery_sub: "Charge and discharge", bat_dis: "Discharge", bat_chg: "Charge", bat_dis_peak: "Discharge peak", bat_chg_peak: "Charge peak",
+    sec_battery: "Battery", l_battery_power: "Battery power (empty = Energy dashboard; + = discharge)", l_battery_soc: "State of charge (%)",
+    l_battery_invert: "Invert sign (+ = charging)", l_battery_color: "Battery colour",
     l_show_totals: "Today's totals under the icons", l_title: "Title (optional)", l_show_frame: "Show the card frame", l_threshold: "Activity threshold (W)", l_curve_factor: "Line curvature (0 = straight)",
     l_solar_power: "Solar power (empty = Energy dashboard)", l_grid_power: "Grid power (empty = Energy dashboard)", l_export_power: "Export power (empty = estimated)",
     l_home_power: "Home power (empty = calculated)", l_export_energy: "Exported energy for the estimate (empty = Energy dashboard)",
@@ -59,6 +67,9 @@ const I18N = {
     min: "Min", max: "Max", average: "Durchschnitt", energy: "Energie", avg_suffix: " (Durchschnitt)",
     device_power: "Geräteleistung", solar: "Solar", production: "Erzeugung", grid: "Netz", buy_sell: "Bezug und Einspeisung", home: "Haus",
     in_dur: "{p} in {d}", hc: "NT", hp: "HT", hc_long: "Niedertarif", hp_long: "Hochtarif", kwh_today: "{x} kWh heute", pct_solar: "{x} % Solar",
+    battery: "Batterie", battery_sub: "Laden und Entladen", bat_dis: "Entladung", bat_chg: "Ladung", bat_dis_peak: "Entladespitze", bat_chg_peak: "Ladespitze",
+    sec_battery: "Batterie", l_battery_power: "Batterieleistung (leer = Energie-Dashboard; + = Entladung)", l_battery_soc: "Ladestand (%)",
+    l_battery_invert: "Vorzeichen umkehren (+ = Laden)", l_battery_color: "Farbe Batterie",
     l_show_totals: "Tagessummen unter den Symbolen", l_title: "Titel (optional)", l_show_frame: "Kartenrahmen anzeigen", l_threshold: "Aktivitätsschwelle (W)", l_curve_factor: "Linienkrümmung (0 = gerade)",
     l_solar_power: "Solarleistung (leer = Energie-Dashboard)", l_grid_power: "Netzleistung (leer = Energie-Dashboard)", l_export_power: "Einspeiseleistung (leer = geschätzt)",
     l_home_power: "Hausleistung (leer = berechnet)", l_export_energy: "Eingespeiste Energie für die Schätzung (leer = Energie-Dashboard)",
@@ -77,6 +88,9 @@ const I18N = {
     min: "Mín", max: "Máx", average: "Media", energy: "Energía", avg_suffix: " (media)",
     device_power: "Potencia del dispositivo", solar: "Solar", production: "Producción", grid: "Red", buy_sell: "Compra y venta", home: "Casa",
     in_dur: "{p} en {d}", hc: "Valle", hp: "Punta", hc_long: "Horas valle", hp_long: "Horas punta", kwh_today: "{x} kWh hoy", pct_solar: "{x} % solar",
+    battery: "Batería", battery_sub: "Carga y descarga", bat_dis: "Descarga", bat_chg: "Carga", bat_dis_peak: "Pico de descarga", bat_chg_peak: "Pico de carga",
+    sec_battery: "Batería", l_battery_power: "Potencia de la batería (vacío = panel de Energía; + = descarga)", l_battery_soc: "Nivel de carga (%)",
+    l_battery_invert: "Invertir el signo (+ = carga)", l_battery_color: "Color batería",
     l_show_totals: "Totales del día bajo los iconos", l_title: "Título (opcional)", l_show_frame: "Mostrar el marco de la tarjeta", l_threshold: "Umbral de actividad (W)", l_curve_factor: "Curvatura de las líneas (0 = rectas)",
     l_solar_power: "Potencia solar (vacío = panel de Energía)", l_grid_power: "Potencia de red (vacío = panel de Energía)", l_export_power: "Potencia vendida (vacío = estimada)",
     l_home_power: "Potencia de la casa (vacío = calculada)", l_export_energy: "Energía vendida para la estimación (vacío = panel de Energía)",
@@ -95,6 +109,9 @@ const I18N = {
     min: "Min", max: "Max", average: "Media", energy: "Energia", avg_suffix: " (media)",
     device_power: "Potenza del dispositivo", solar: "Solare", production: "Produzione", grid: "Rete", buy_sell: "Prelievo e immissione", home: "Casa",
     in_dur: "{p} tra {d}", hc: "F. punta", hp: "Punta", hc_long: "Fuori punta", hp_long: "Ore di punta", kwh_today: "{x} kWh oggi", pct_solar: "{x}% solare",
+    battery: "Batteria", battery_sub: "Carica e scarica", bat_dis: "Scarica", bat_chg: "Carica", bat_dis_peak: "Picco di scarica", bat_chg_peak: "Picco di carica",
+    sec_battery: "Batteria", l_battery_power: "Potenza batteria (vuoto = dashboard Energia; + = scarica)", l_battery_soc: "Livello di carica (%)",
+    l_battery_invert: "Inverti il segno (+ = carica)", l_battery_color: "Colore batteria",
     l_show_totals: "Totali del giorno sotto le icone", l_title: "Titolo (facoltativo)", l_show_frame: "Mostra la cornice della scheda", l_threshold: "Soglia di attività (W)", l_curve_factor: "Curvatura delle linee (0 = dritte)",
     l_solar_power: "Potenza solare (vuoto = dashboard Energia)", l_grid_power: "Potenza di rete (vuoto = dashboard Energia)", l_export_power: "Potenza immessa (vuoto = stimata)",
     l_home_power: "Potenza della casa (vuoto = calcolata)", l_export_energy: "Energia immessa per la stima (vuoto = dashboard Energia)",
@@ -113,6 +130,9 @@ const I18N = {
     min: "Min", max: "Max", average: "Gemiddeld", energy: "Energie", avg_suffix: " (gemiddeld)",
     device_power: "Vermogen van het apparaat", solar: "Zon", production: "Opwekking", grid: "Net", buy_sell: "Afname en teruglevering", home: "Huis",
     in_dur: "{p} over {d}", hc: "Dal", hp: "Piek", hc_long: "Daltarief", hp_long: "Piektarief", kwh_today: "{x} kWh vandaag", pct_solar: "{x}% zon",
+    battery: "Batterij", battery_sub: "Laden en ontladen", bat_dis: "Ontladen", bat_chg: "Laden", bat_dis_peak: "Ontlaadpiek", bat_chg_peak: "Laadpiek",
+    sec_battery: "Batterij", l_battery_power: "Batterijvermogen (leeg = Energiedashboard; + = ontladen)", l_battery_soc: "Laadniveau (%)",
+    l_battery_invert: "Teken omkeren (+ = laden)", l_battery_color: "Kleur batterij",
     l_show_totals: "Dagtotalen onder de pictogrammen", l_title: "Titel (optioneel)", l_show_frame: "Kaartkader tonen", l_threshold: "Activiteitsdrempel (W)", l_curve_factor: "Kromming van de lijnen (0 = recht)",
     l_solar_power: "Zonnevermogen (leeg = Energiedashboard)", l_grid_power: "Netvermogen (leeg = Energiedashboard)", l_export_power: "Terugleververmogen (leeg = geschat)",
     l_home_power: "Huisvermogen (leeg = berekend)", l_export_energy: "Teruggeleverde energie voor de schatting (leeg = Energiedashboard)",
@@ -131,6 +151,9 @@ const I18N = {
     min: "Mín", max: "Máx", average: "Média", energy: "Energia", avg_suffix: " (média)",
     device_power: "Potência do dispositivo", solar: "Solar", production: "Produção", grid: "Rede", buy_sell: "Compra e venda", home: "Casa",
     in_dur: "{p} em {d}", hc: "Vazio", hp: "Cheias", hc_long: "Horas de vazio", hp_long: "Horas cheias", kwh_today: "{x} kWh hoje", pct_solar: "{x}% solar",
+    battery: "Bateria", battery_sub: "Carga e descarga", bat_dis: "Descarga", bat_chg: "Carga", bat_dis_peak: "Pico de descarga", bat_chg_peak: "Pico de carga",
+    sec_battery: "Bateria", l_battery_power: "Potência da bateria (vazio = painel Energia; + = descarga)", l_battery_soc: "Nível de carga (%)",
+    l_battery_invert: "Inverter o sinal (+ = carga)", l_battery_color: "Cor da bateria",
     l_show_totals: "Totais do dia sob os ícones", l_title: "Título (opcional)", l_show_frame: "Mostrar a moldura do cartão", l_threshold: "Limite de atividade (W)", l_curve_factor: "Curvatura das linhas (0 = retas)",
     l_solar_power: "Potência solar (vazio = painel Energia)", l_grid_power: "Potência da rede (vazio = painel Energia)", l_export_power: "Potência vendida (vazio = estimada)",
     l_home_power: "Potência da casa (vazio = calculada)", l_export_energy: "Energia vendida para a estimativa (vazio = painel Energia)",
@@ -149,6 +172,9 @@ const I18N = {
     min: "Min", max: "Maks", average: "Średnia", energy: "Energia", avg_suffix: " (średnia)",
     device_power: "Moc urządzenia", solar: "PV", production: "Produkcja", grid: "Sieć", buy_sell: "Pobór i oddawanie", home: "Dom",
     in_dur: "{p} za {d}", hc: "Poza szczytem", hp: "Szczyt", hc_long: "Strefa pozaszczytowa", hp_long: "Strefa szczytowa", kwh_today: "{x} kWh dziś", pct_solar: "{x}% PV",
+    battery: "Bateria", battery_sub: "Ładowanie i rozładowanie", bat_dis: "Rozładowanie", bat_chg: "Ładowanie", bat_dis_peak: "Szczyt rozładowania", bat_chg_peak: "Szczyt ładowania",
+    sec_battery: "Bateria", l_battery_power: "Moc baterii (puste = panel Energia; + = rozładowanie)", l_battery_soc: "Poziom naładowania (%)",
+    l_battery_invert: "Odwróć znak (+ = ładowanie)", l_battery_color: "Kolor baterii",
     l_show_totals: "Dzisiejsze sumy pod ikonami", l_title: "Tytuł (opcjonalnie)", l_show_frame: "Pokaż ramkę karty", l_threshold: "Próg aktywności (W)", l_curve_factor: "Krzywizna linii (0 = proste)",
     l_solar_power: "Moc PV (puste = panel Energia)", l_grid_power: "Moc sieci (puste = panel Energia)", l_export_power: "Moc oddawana (puste = szacowana)",
     l_home_power: "Moc domu (puste = obliczana)", l_export_energy: "Energia oddana do szacowania (puste = panel Energia)",
@@ -172,9 +198,9 @@ const setLoc = (hass, c) => { const l = langOf(hass, c); const p = hass?.locale?
 // open(hass, {
 //   name, subtitle, color, icon, entity (pour « Détails »),
 //   mode: "power" | "energy",
-//   power: entité de puissance (W ou kW) ou liste d'entités additionnées,  signed: true = négatif → revente (réseau)
+//   power: entité de puissance (W ou kW), liste d'entités additionnées, ou { id, neg: true } (signe inversé),  signed: true = négatif → revente (réseau)
 //   energy: [statistic_id…] (kWh, ajoutés),  energyNeg: [statistic_id…] (soustraits),  energyOut: [statistic_id…] (revente, réseau)
-//   price: €/kWh (estimation du coût, mode énergie), outColor, defaultRange
+//   price: €/kWh (estimation du coût, mode énergie), outColor, defaultRange, bat: true (libellés charge / décharge)
 // })
 if (!customElements.get("holm-energy-chart-v1b")) {
   const frc = (v, d = 1) => Number(v).toLocaleString(NUMLOC, { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -297,7 +323,12 @@ if (!customElements.get("holm-energy-chart-v1b")) {
       }
     }
     // série de puissance (W) : statistiques (5 min / heure) si dispo, sinon historique brut
+    // `ids` : entité, liste d'entités (additionnées) ou { id, neg: true } (signe inversé)
     async _powerSeries(ids, start, end) {
+      if (ids && !Array.isArray(ids) && typeof ids === "object") {
+        const s = await this._powerSeries(ids.id, start, end);
+        return ids.neg ? s.map((p) => ({ ...p, v: -p.v, ...(p.hi !== undefined ? { lo: -p.hi, hi: -p.lo } : {}) })) : s;
+      }
       if (Array.isArray(ids)) {
         if (ids.length === 1) return this._powerSeries(ids[0], start, end);
         const all = await Promise.all(ids.map((i) => this._powerSeries(i, start, end)));
@@ -342,6 +373,9 @@ if (!customElements.get("holm-energy-chart-v1b")) {
       const d = this._data, ch = this.shadowRoot.getElementById("ch"), st = this.shadowRoot.getElementById("stats"), lg = this.shadowRoot.getElementById("lg");
       if (!d || !ch) return;
       const o = this._o;
+      // libellés : charge / décharge pour la batterie, achat / revente pour le réseau
+      const BATK = { buy_peak: "bat_dis_peak", sell_peak: "bat_chg_peak", bought: "bat_dis", sold: "bat_chg", grid_buy: "bat_dis", resale: "bat_chg" };
+      const kk = (k) => this._t(o.bat && BATK[k] ? BATK[k] : k);
       const W = Math.max(280, ch.clientWidth || 600), H = Math.round(Math.min(320, Math.max(200, W * 0.42)));
       const P = { l: 44, r: d.kind === "bars" && d.line ? 44 : 12, t: 12, b: 24 };
       const x = (t) => P.l + ((t - d.t0) / (d.t1 - d.t0 || 1)) * (W - P.l - P.r);
@@ -404,16 +438,16 @@ if (!customElements.get("holm-energy-chart-v1b")) {
         const dt = (i) => (i + 1 < pts.length ? pts[i + 1].t : d.t1) - Math.max(pts[i].t, d.t0);
         let pos = 0, neg = 0, tw = 0, wsum = 0;
         pts.forEach((p, i) => { const h = Math.max(0, dt(i)) / 3600e3; if (p.v > 0) pos += p.v * h; else neg += -p.v * h; tw += h; wsum += p.v * h; });
-        const pIds = Array.isArray(o.power) ? o.power : [o.power];
+        const pIds = (Array.isArray(o.power) ? o.power : [o.power]).map((i) => (i && typeof i === "object" ? i.id : i));
         const cur = o.current != null ? o.current : pIds.reduce((a, i) => { const s = this._hass.states[i]; const v = parseFloat(s?.state); return a + (isNaN(v) ? NaN : v * ((s.attributes.unit_of_measurement || "") === "kW" ? 1000 : 1)); }, 0);
         const curW = isNaN(cur) ? pts[pts.length - 1].v : cur;
         const mx = Math.max(...pts.map((p) => (p.hi !== undefined && !isNaN(p.hi) ? p.hi : p.v)));
         const mn = Math.min(...pts.map((p) => (p.lo !== undefined && !isNaN(p.lo) ? p.lo : p.v)));
         const eIn = !isNaN(d.eIn) ? d.eIn : pos / 1000, eOut = !isNaN(d.eOut) ? d.eOut : neg / 1000;
         if (o.signed) {
-          stats = `<div><small>${this._t("current")}</small><b>${curW < 0 ? "↑ " : curW > 0 ? "↓ " : ""}${fW(Math.abs(curW))}</b></div><div><small>${this._t("buy_peak")}</small><b>${fW(Math.max(0, mx))}</b></div>
-            ${mn < 0 ? `<div><small>${this._t("sell_peak")}</small><b>${fW(-mn)}</b></div>` : ""}<div class="in"><small>${this._t("bought")}</small><b>${fK(eIn)}</b></div><div class="out"><small>${this._t("sold")}</small><b>${fK(eOut)}</b></div>`;
-          legend = `<span><i class="lin"></i>${this._t("grid_buy")}</span><span><i class="lout"></i>${this._t("resale")}</span>`;
+          stats = `<div><small>${this._t("current")}</small><b>${curW < 0 ? "↑ " : curW > 0 ? "↓ " : ""}${fW(Math.abs(curW))}</b></div><div><small>${kk("buy_peak")}</small><b>${fW(Math.max(0, mx))}</b></div>
+            ${mn < 0 ? `<div><small>${kk("sell_peak")}</small><b>${fW(-mn)}</b></div>` : ""}<div class="in"><small>${kk("bought")}</small><b>${fK(eIn)}</b></div><div class="out"><small>${kk("sold")}</small><b>${fK(eOut)}</b></div>`;
+          legend = `<span><i class="lin"></i>${kk("grid_buy")}</span><span><i class="lout"></i>${kk("resale")}</span>`;
         } else {
           stats = `<div><small>${this._t("current")}</small><b>${fW(curW)}</b></div><div><small>${this._t("min")}</small><b>${fW(Math.max(0, mn))}</b></div><div><small>${this._t("max")}</small><b>${fW(mx)}</b></div>
             <div><small>${this._t("average")}</small><b>${fW(tw ? wsum / tw : 0)}</b></div><div><small>${this._t("energy")}</small><b>${fK(eIn)}</b></div>`;
@@ -424,7 +458,7 @@ if (!customElements.get("holm-energy-chart-v1b")) {
           if (!p) p = pts[0];
           const lbl = new Date(t).toLocaleString(NUMLOC, { weekday: "short", hour: "2-digit", minute: "2-digit" });
           const v = p.v, extra = isStat && !isNaN(p.lo) && step ? `<span>${this._t("min").toLowerCase()} ${fW(p.lo)} · ${this._t("max").toLowerCase()} ${fW(p.hi)}</span>` : "";
-          return { px: x(t), py: y(v), html: `<small>${escc(lbl)}</small><b>${o.signed ? (v < 0 ? "↑ revente " : "↓ achat ") : ""}${fW(Math.abs(v))}</b>${extra}` };
+          return { px: x(t), py: y(v), html: `<small>${escc(lbl)}</small><b>${o.signed ? (v < 0 ? "↑ " + kk("resale").toLowerCase() + " " : "↓ " + kk("grid_buy").toLowerCase() + " ") : ""}${fW(Math.abs(v))}</b>${extra}` };
         };
       }
       svgBody += xs.map(([t, l]) => `<text class="xl" x="${x(t).toFixed(1)}" y="${H - 6}">${escc(l)}</text>`).join("");
@@ -507,7 +541,7 @@ const openEnergyChart = (hass, o) => {
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fr = (v, d = 1) => Number(v).toLocaleString(NUMLOC, { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtW = (w) => (Math.abs(w) >= 1000 ? [fr(w / 1000, Math.abs(w) >= 10000 ? 1 : 2), "kW"] : [fr(w, 0), "W"]);
-const DEF = { solar_color: "#e3a21a", home_color: "#0abfbf", grid_color: "#4a90d9", grid_hp_color: "#e2702a", export_color: "#9b6fd6" };
+const DEF = { solar_color: "#e3a21a", home_color: "#0abfbf", grid_color: "#4a90d9", grid_hp_color: "#e2702a", export_color: "#9b6fd6", battery_color: "#3fb97a" };
 const ICONS = [
   [/chauffe.?eau|ballon|water.?heater|boiler/i, "mdi:water-boiler"], [/clim|air.?con/i, "mdi:snowflake"], [/chauffage|radiateur|heater|heating/i, "mdi:radiator"],
   [/s[eè]che.?serviette/i, "mdi:heating-coil"], [/volet/i, "mdi:window-shutter"], [/frigo|r[ée]frig|fridge/i, "mdi:fridge-outline"],
@@ -542,7 +576,7 @@ class HolmPowerFlowCard extends HTMLElement {
     this._inited = true;
     let p = { energy_sources: [], device_consumption: [] };
     try { p = await this._hass.callWS({ type: "energy/get_prefs" }); } catch (e) { /* pas de tableau Énergie */ }
-    const s = { solar: null, solarE: null, grid: null, expE: null, devices: [], solarEs: [], gIn: [], gOut: [], devE: {} };
+    const s = { solar: null, solarE: null, grid: null, expE: null, devices: [], solarEs: [], gIn: [], gOut: [], devE: {}, bat: null, batIn: [], batOut: [] };
     for (const x of p.energy_sources || []) {
       if (x.type === "solar") { s.solar = s.solar || x.stat_rate; s.solarE = s.solarE || x.stat_energy_from; if (x.stat_energy_from) s.solarEs.push(x.stat_energy_from); }
       if (x.type === "grid") {
@@ -550,6 +584,11 @@ class HolmPowerFlowCard extends HTMLElement {
         const to = x.flow_to ? x.flow_to[0]?.stat_energy_to : x.stat_energy_to; s.expE = s.expE || to;
         (x.flow_from || (x.stat_energy_from ? [x] : [])).forEach((f) => f.stat_energy_from && s.gIn.push(f.stat_energy_from));
         (x.flow_to || (x.stat_energy_to ? [x] : [])).forEach((f) => f.stat_energy_to && s.gOut.push(f.stat_energy_to));
+      }
+      if (x.type === "battery") {
+        s.bat = s.bat || x.power_config?.stat_rate || x.stat_rate || null;
+        if (x.stat_energy_to) s.batIn.push(x.stat_energy_to);      // énergie de charge
+        if (x.stat_energy_from) s.batOut.push(x.stat_energy_from); // énergie de décharge
       }
     }
     s.devices = (p.device_consumption || []).filter((d) => d.stat_rate).map((d) => ({ entity: d.stat_rate, name: d.name }));
@@ -567,24 +606,26 @@ class HolmPowerFlowCard extends HTMLElement {
     this._build();
     this._loadTotals();
   }
-  // totaux du jour (statistiques du tableau Énergie) : acheté / revendu, produit, consommé
+  // totaux du jour (statistiques du tableau Énergie) : acheté / revendu, produit, consommé, batterie
   async _loadTotals() {
     const s = this._src; if (!s || this._c.show_totals === false || !this._hass) return;
-    const ids = [...s.gIn, ...s.gOut, ...s.solarEs]; if (!ids.length) return;
+    const ids = [...s.gIn, ...s.gOut, ...s.solarEs, ...s.batIn, ...s.batOut]; if (!ids.length) return;
     const start = new Date(); start.setHours(0, 0, 0, 0);
     try {
       const r = await this._hass.callWS({ type: "recorder/statistics_during_period", start_time: start.toISOString(), end_time: new Date().toISOString(),
         statistic_ids: [...new Set(ids)], period: "hour", types: ["change"], units: { energy: "kWh" } });
       const sum = (a) => a.reduce((t, id) => t + (r[id] || []).reduce((b, x) => b + (Number(x.change) || 0), 0), 0);
-      const imp = sum(s.gIn), exp = sum(s.gOut), sol = sum(s.solarEs);
-      this._tot = { imp: s.gIn.length ? imp : NaN, exp: s.gOut.length ? exp : NaN, sol: s.solarEs.length ? sol : NaN, home: s.gIn.length ? Math.max(0, imp + sol - exp) : NaN };
+      const imp = sum(s.gIn), exp = sum(s.gOut), sol = sum(s.solarEs), bin = sum(s.batIn), bout = sum(s.batOut);
+      this._tot = { imp: s.gIn.length ? imp : NaN, exp: s.gOut.length ? exp : NaN, sol: s.solarEs.length ? sol : NaN,
+        bin: s.batIn.length ? bin : NaN, bout: s.batOut.length ? bout : NaN,
+        home: s.gIn.length ? Math.max(0, imp + sol + bout - exp - bin) : NaN };
       this._update(true);
     } catch (e) { /* totaux facultatifs */ }
   }
   _t(k, v) { return tr(this._lang || langOf(this._hass, this._c), k, v); }
   _chart(k, dev) {
     const c = this._c, s = this._src || {}, v = this._values();
-    const col = { solar: c.solar_color || DEF.solar_color, home: c.home_color || DEF.home_color, grid: this._gridColor() };
+    const col = { solar: c.solar_color || DEF.solar_color, home: c.home_color || DEF.home_color, grid: this._gridColor(), bat: c.battery_color || DEF.battery_color };
     let o;
     if (dev) {
       const name = dev.name || this._hass.states[dev.entity]?.attributes.friendly_name || dev.entity;
@@ -594,10 +635,16 @@ class HolmPowerFlowCard extends HTMLElement {
     } else if (k === "grid") {
       o = { name: this._t("grid"), subtitle: this._t("buy_sell"), icon: "mdi:transmission-tower", color: c.grid_color || DEF.grid_color, outColor: c.export_color || DEF.export_color,
         power: this._ent("grid"), entity: this._ent("grid"), signed: true, energy: s.gIn, energyOut: s.gOut };
+    } else if (k === "bat") {
+      const bid = this._ent("bat");
+      o = { name: this._t("battery"), subtitle: this._t("battery_sub"), icon: "mdi:battery-high", color: col.bat, outColor: col.solar,
+        power: c.battery_invert ? { id: bid, neg: true } : bid, entity: bid, signed: true, bat: true, current: v.b,
+        energy: s.batOut, energyOut: s.batIn };
     } else {
-      const pw = c.home_power ? c.home_power : [this._ent("solar"), this._ent("grid")].filter(Boolean);
+      const bid = this._ent("bat");
+      const pw = c.home_power ? c.home_power : [this._ent("solar"), this._ent("grid"), bid ? (c.battery_invert ? { id: bid, neg: true } : bid) : null].filter(Boolean);
       o = { name: this._t("home"), subtitle: this._t("consumption"), icon: "mdi:home-lightning-bolt", color: col.home, power: pw, entity: c.home_power || null, current: v.home,
-        energy: [...s.gIn, ...s.solarEs], energyNeg: s.gOut };
+        energy: [...s.gIn, ...s.solarEs, ...s.batOut], energyNeg: [...s.gOut, ...s.batIn] };
     }
     if (!o.power || (Array.isArray(o.power) && !o.power.length)) return o.entity && this._more(o.entity);
     o.lang = this._lang; setLoc(this._hass, this._c);
@@ -606,7 +653,7 @@ class HolmPowerFlowCard extends HTMLElement {
   _ent(k) {
     const c = this._c, s = this._src || {};
     return { solar: c.solar_power || s.solar, grid: c.grid_power || s.grid, exp: c.export_power, home: c.home_power, expE: c.export_energy || s.expE,
-      solarE: s.solarE, tariff: c.tariff_entity || null }[k];
+      solarE: s.solarE, tariff: c.tariff_entity || null, bat: c.battery_power || s.bat, soc: c.battery_soc }[k];
   }
   _n(id) { if (!id) return NaN; const s = this._hass.states[id]; if (!s) return NaN; let v = parseFloat(s.state); const u = s.attributes.unit_of_measurement; if (u === "kW") v *= 1000; return v; }
   _exportEstimate(imp) {
@@ -625,15 +672,21 @@ class HolmPowerFlowCard extends HTMLElement {
     const c = this._c, th = Number(c.threshold) || 0;
     let solar = Math.max(0, this._n(this._ent("solar")) || 0);
     let g = this._n(this._ent("grid")); g = isNaN(g) ? 0 : g;
+    // batterie : b > 0 = décharge, b < 0 = charge
+    let b = this._n(this._ent("bat")); b = isNaN(b) ? 0 : (c.battery_invert ? -b : b);
+    const bd = Math.max(0, b), bc = Math.max(0, -b);
+    const soc = parseFloat(this._hass.states[c.battery_soc]?.state);
     let imp = Math.max(0, g), exp = g < 0 ? -g : 0, est = false;
     if (c.export_power) exp = Math.max(0, this._n(c.export_power) || 0);
     else if (!(g < 0)) { exp = this._exportEstimate(imp); est = exp > 0; }
-    exp = Math.min(exp, solar);
-    let home = c.home_power ? this._n(c.home_power) : solar + imp - exp;
+    exp = Math.min(exp, solar + bd);
+    let home = c.home_power ? this._n(c.home_power) : solar + bd + imp - exp - bc;
     home = Math.max(0, isNaN(home) ? 0 : home);
-    const selfUse = Math.max(0, solar - exp);
+    const selfUse = Math.max(0, solar - exp - bc);               // solaire consommé directement par la maison
+    const batHome = Math.max(0, bd - Math.max(0, exp - solar));  // décharge qui alimente la maison
     const share = home > 0 ? Math.min(1, selfUse / home) : solar > 0 ? 1 : 0;
-    return { solar, imp, exp, home, selfUse, share, est, th };
+    const shareB = home > 0 ? Math.min(1 - share, batHome / home) : 0;
+    return { solar, imp, exp, home, selfUse, share, shareB, est, th, b, bd, bc, soc };
   }
   // ---- HOLM HP/HC : binary_sensor des heures creuses (attributs prochaine_bascule, tarif) ----
   _hcEnt() {
@@ -675,13 +728,19 @@ class HolmPowerFlowCard extends HTMLElement {
   }
   _build() {
     if (!this.shadowRoot || !this._c || !this._src) return;
-    const c = this._c, W = Math.max(260, (this._w || this.clientWidth || 400) - 24), H = (c.show_totals !== false ? 112 : 96) + (c.show_countdown !== false && (this._ent("tariff") || (this._hass && this._hcEnt())) ? 13 : 0), cy = 30, r = 22;
-    const xs = Math.round(W * 0.14), xh = Math.round(W * 0.5), xg = Math.round(W * 0.86);
-    const col = { s: c.solar_color || DEF.solar_color, h: c.home_color || DEF.home_color, e: c.export_color || DEF.export_color };
+    const hasBat = !!this._ent("bat"); this._hasBat = hasBat;
+    const top = hasBat ? 16 : 0; // place pour l'arc solaire → maison au-dessus de la batterie
+    const c = this._c, W = Math.max(260, (this._w || this.clientWidth || 400) - 24),
+      H = (c.show_totals !== false ? 112 : 96) + (c.show_countdown !== false && (this._ent("tariff") || (this._hass && this._hcEnt())) ? 13 : 0) + top, cy = 30 + top, r = 22;
+    const xs = Math.round(W * (hasBat ? 0.12 : 0.14)), xb = Math.round(W * 0.37), xh = Math.round(W * (hasBat ? 0.63 : 0.5)), xg = Math.round(W * (hasBat ? 0.88 : 0.86));
+    const col = { s: c.solar_color || DEF.solar_color, h: c.home_color || DEF.home_color, e: c.export_color || DEF.export_color, b: c.battery_color || DEF.battery_color };
     const cf = c.curve_factor !== undefined ? Number(c.curve_factor) : 1;
     const sag = 10 * cf;
-    // chemins : solaire → maison, réseau → maison (import), maison → réseau (export), solaire → réseau (arc)
-    const pSH = `M${xs + r + 4},${cy} C${xs + r + 4 + (xh - xs) * 0.35},${cy + sag} ${xh - r - 4 - (xh - xs) * 0.35},${cy + sag} ${xh - r - 4},${cy}`;
+    const cv = (a, b) => `M${a},${cy} C${a + (b - a) * 0.35},${cy + sag} ${b - (b - a) * 0.35},${cy + sag} ${b},${cy}`;
+    // chemins : solaire → maison (direct ou arc), solaire → batterie, batterie → maison, réseau → maison (import), maison → réseau (export)
+    const pSH = hasBat ? `M${xs},${cy - r - 2} C${xs},${cy - r - 18} ${xh},${cy - r - 18} ${xh},${cy - r - 2}`
+      : `M${xs + r + 4},${cy} C${xs + r + 4 + (xh - xs) * 0.35},${cy + sag} ${xh - r - 4 - (xh - xs) * 0.35},${cy + sag} ${xh - r - 4},${cy}`;
+    const pSB = cv(xs + r + 4, xb - r - 4), pBH = cv(xb + r + 4, xh - r - 4);
     const pGH = `M${xg - r - 4},${cy} C${xg - r - 4 - (xg - xh) * 0.35},${cy + sag} ${xh + r + 4 + (xg - xh) * 0.35},${cy + sag} ${xh + r + 4},${cy}`;
     const pHG = `M${xh + r + 4},${cy} C${xh + r + 4 + (xg - xh) * 0.35},${cy + sag} ${xg - r - 4 - (xg - xh) * 0.35},${cy + sag} ${xg - r - 4},${cy}`;
     const dots = (cls, path, color) => [0, 1, 2].map((i) => `<circle r="3" class="dot ${cls}" style="offset-path:path('${path}');fill:${color};--i:${i}"/>`).join("");
@@ -699,7 +758,7 @@ class HolmPowerFlowCard extends HTMLElement {
       .dot { opacity:0; offset-rotate:0deg; filter:drop-shadow(0 0 4px currentColor); }
       .dot.run { opacity:1; animation:mv var(--d) linear infinite; animation-delay:calc(var(--d) * var(--i) / -3); }
       @keyframes mv { from { offset-distance:0%; } to { offset-distance:100%; } }
-      .node { position:absolute; top:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:${Math.min(120, Math.round(W * 0.3))}px; text-align:center; cursor:pointer; }
+      .node { position:absolute; top:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:${Math.min(120, Math.round(W * (hasBat ? 0.23 : 0.3)))}px; text-align:center; cursor:pointer; }
       .ic { width:${2 * r}px; height:${2 * r}px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; box-sizing:border-box;
             background:color-mix(in srgb, var(--c) 16%, transparent); color:var(--c); border:1.5px solid color-mix(in srgb, var(--c) 45%, transparent);
             transition:box-shadow .6s, opacity .6s; margin-top:${cy - r}px; }
@@ -707,7 +766,7 @@ class HolmPowerFlowCard extends HTMLElement {
       .node.on .ic { box-shadow:0 0 14px color-mix(in srgb, var(--c) 45%, transparent); }
       .node.off .ic { opacity:.45; }
       .home .ic { border:none; background:none; }
-      .home .ring { position:absolute; inset:0; border-radius:50%; background:conic-gradient(var(--rs) 0 var(--p), var(--rg) var(--p) 100%);
+      .home .ring { position:absolute; inset:0; border-radius:50%; background:conic-gradient(var(--rs) 0 var(--p), var(--rb, transparent) var(--p) var(--p2, var(--p)), var(--rg) var(--p2, var(--p)) 100%);
             -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask:radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); transition:background .6s; }
       .home .ic::before { content:""; position:absolute; inset:4px; border-radius:50%; background:color-mix(in srgb, var(--c) 14%, transparent); }
       .v { font-size:15px; font-weight:700; color:var(--primary-text-color); margin-top:4px; white-space:nowrap; font-variant-numeric:tabular-nums; line-height:1.1; }
@@ -715,8 +774,9 @@ class HolmPowerFlowCard extends HTMLElement {
       .v .ar { font-size:.8em; margin-right:2px; }
       .k { font-size:11px; font-weight:600; color:var(--primary-text-color); opacity:.85; white-space:nowrap; font-variant-numeric:tabular-nums; line-height:1.3; }
       .k .in { color:var(--gc); } .k .out { color:${c.export_color || DEF.export_color}; }
+      .node.bat .k .in { color:${col.b}; } .node.bat .k .out { color:${col.s}; }
       .k:empty { display:none; }
-      .node.grid { width:${Math.min(144, Math.round(W * 0.29))}px; }
+      .node.grid { width:${Math.min(144, Math.round(W * (hasBat ? 0.24 : 0.29)))}px; }
       .cd { font-size:10.5px; font-weight:600; white-space:nowrap; line-height:1.3; font-variant-numeric:tabular-nums; color:color-mix(in srgb, var(--cdc, var(--secondary-text-color)) 85%, var(--primary-text-color)); }
       .cd:empty { display:none; }
       .s { font-size:11px; color:var(--secondary-text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; line-height:1.3; }
@@ -734,9 +794,12 @@ class HolmPowerFlowCard extends HTMLElement {
       <div class="flow">
         <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
           <path id="lSH" class="ln" d="${pSH}" stroke="${col.s}"/><path id="lGH" class="ln" d="${pGH}"/>
+          ${hasBat ? `<path id="lSB" class="ln" d="${pSB}" stroke="${col.s}"/><path id="lBH" class="ln" d="${pBH}" stroke="${col.b}"/>` : ""}
           ${dots("dSH", pSH, col.s)}${dots("dGH", pGH, "var(--gc)")}${dots("dHG", pHG, col.e)}
+          ${hasBat ? dots("dSB", pSB, col.s) + dots("dBH", pBH, col.b) : ""}
         </svg>
         <div class="node solar" data-e="solar" style="left:${xs}px;--c:${col.s}"><div class="ic"><ha-icon icon="mdi:solar-power-variant"></ha-icon></div><div class="v" id="vS"></div><div class="s" id="sS"></div><div class="k" id="kS"></div></div>
+        ${hasBat ? `<div class="node bat" data-e="bat" style="left:${xb}px;--c:${col.b}"><div class="ic"><ha-icon icon="mdi:battery"></ha-icon></div><div class="v" id="vB"></div><div class="s" id="sB"></div><div class="k" id="kB"></div></div>` : ""}
         <div class="node home" data-e="home" style="left:${xh}px;--c:${col.h}"><div class="ic"><div class="ring"></div><ha-icon icon="mdi:home-lightning-bolt"></ha-icon></div><div class="v" id="vH"></div><div class="s" id="sH"></div><div class="k" id="kH"></div></div>
         <div class="node grid" data-e="grid" style="left:${xg}px"><div class="ic"><ha-icon icon="mdi:transmission-tower"></ha-icon></div><div class="v" id="vG"></div><div class="s" id="sG"></div><div class="cd" id="cG"></div><div class="k" id="kG"></div></div>
       </div>
@@ -763,7 +826,7 @@ class HolmPowerFlowCard extends HTMLElement {
   _update(force) {
     const sr = this.shadowRoot; if (!sr || !sr.querySelector(".flow") || !this._hass) return;
     const c = this._c, e = this._ent.bind(this);
-    const ids = [e("solar"), e("grid"), c.export_power, c.home_power, e("expE"), e("solarE"), e("tariff"), this._hcEnt(), c.solar_label, c.grid_label, c.home_label, ...(this._src?.devices || []).map((d) => d.entity)];
+    const ids = [e("solar"), e("grid"), c.export_power, c.home_power, e("expE"), e("solarE"), e("tariff"), this._hcEnt(), c.solar_label, c.grid_label, c.home_label, e("bat"), c.battery_soc, ...(this._src?.devices || []).map((d) => d.entity)];
     const sig = ids.map((i) => (i ? this._hass.states[i]?.state : "")).join("|");
     if (!force && sig === this._sig) return;
     this._sig = sig;
@@ -793,11 +856,13 @@ class HolmPowerFlowCard extends HTMLElement {
     set("kS", T && !isNaN(T.sol) ? `${kv(T.sol)} kWh` : "");
     set("kH", T && !isNaN(T.home) ? `${kv(T.home)} kWh` : "");
     set("kG", T && (!isNaN(T.imp) || !isNaN(T.exp)) ? `${!isNaN(T.imp) ? `<span class="in">↓</span>${kv(T.imp)}` : ""}${!isNaN(T.exp) ? ` <span class="out">↑</span>${kv(T.exp)}` : ""} kWh` : "");
-    // anneau maison : part solaire / réseau
+    // anneau maison : part solaire / batterie / réseau
     const ring = sr.querySelector(".home .ring");
     ring.style.setProperty("--rs", c.solar_color || DEF.solar_color); ring.style.setProperty("--rg", gc);
     ring.style.setProperty("--p", `${Math.round(v.share * 100)}%`);
-    if (v.home <= v.th) { ring.style.setProperty("--rs", "rgba(127,127,127,.3)"); ring.style.setProperty("--rg", "rgba(127,127,127,.3)"); }
+    ring.style.setProperty("--rb", c.battery_color || DEF.battery_color);
+    ring.style.setProperty("--p2", `${Math.round((v.share + v.shareB) * 100)}%`);
+    if (v.home <= v.th) { ring.style.setProperty("--rs", "rgba(127,127,127,.3)"); ring.style.setProperty("--rg", "rgba(127,127,127,.3)"); ring.style.setProperty("--rb", "rgba(127,127,127,.3)"); }
     // nœuds allumés / éteints
     sr.querySelector(".solar").className = `node solar ${v.solar > v.th ? "on" : "off"}`;
     sr.querySelector(".grid").className = `node grid ${v.imp > v.th || v.exp > v.th ? "on" : "off"}`;
@@ -812,6 +877,19 @@ class HolmPowerFlowCard extends HTMLElement {
       sr.querySelectorAll("." + cls).forEach((d) => { d.classList.toggle("run", L > 0); if (L) d.style.setProperty("--d", DUR[L] + "s"); });
     };
     run("dSH", v.solar); run("dGH", v.imp); run("dHG", v.exp);
+    // batterie : ↓ = décharge (fournit), ↑ = charge (reçoit), comme pour le réseau
+    if (this._hasBat) {
+      const lvl = isNaN(v.soc) ? null : Math.round(v.soc / 10) * 10, chg = v.bc > v.th;
+      const ico = "mdi:battery" + (chg ? "-charging" : "") + (lvl === null ? "" : lvl <= 0 ? "-outline" : lvl >= 100 ? (chg ? "-100" : "") : "-" + lvl);
+      const hi = sr.querySelector(".bat ha-icon"); if (hi && hi.getAttribute("icon") !== ico) hi.setAttribute("icon", ico);
+      set("vB", chg ? w(v.bc, `<span class="ar">↑</span>`) : v.bd > v.th ? w(v.bd, `<span class="ar">↓</span>`) : w(0));
+      set("sB", isNaN(v.soc) ? this._t("battery") : `${fr(v.soc, 0)} %`);
+      set("kB", T && !isNaN(T.bout) ? `<span class="in">↓</span>${kv(T.bout)} <span class="out">↑</span>${kv(T.bin)} kWh` : "");
+      sr.querySelector(".bat").className = `node bat ${chg || v.bd > v.th ? "on" : "off"}`;
+      sr.getElementById("lSB").classList.toggle("on", chg && v.solar > v.th);
+      sr.getElementById("lBH").classList.toggle("on", v.bd > v.th);
+      run("dSB", Math.min(v.bc, v.solar)); run("dBH", v.bd);
+    }
     // appareils actifs
     if (c.show_devices !== false) {
       const list = (Array.isArray(c.devices) && c.devices.length ? c.devices.map((d) => (typeof d === "string" ? { entity: d } : d)) : this._src.devices)
@@ -836,7 +914,7 @@ class HolmPowerFlowCard extends HTMLElement {
 const hex2rgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return undefined; const n = parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const rgb2hex = (a) => Array.isArray(a) ? "#" + a.map((v) => Number(v).toString(16).padStart(2, "0")).join("") : a;
 const S = ["sensor"], ANY = ["sensor", "input_number", "number"];
-const COLORS = ["solar_color", "home_color", "grid_color", "grid_hp_color", "export_color"];
+const COLORS = ["solar_color", "home_color", "grid_color", "grid_hp_color", "export_color", "battery_color"];
 const SCHEMA = [
   { name: "title", selector: { text: {} } },
   { type: "grid", name: "", schema: [
@@ -849,6 +927,10 @@ const SCHEMA = [
     { name: "solar_power", selector: { entity: { domain: S } } }, { name: "grid_power", selector: { entity: { domain: S } } },
     { name: "export_power", selector: { entity: { domain: S } } }, { name: "home_power", selector: { entity: { domain: S } } },
     { name: "export_energy", selector: { entity: { domain: S } } },
+  ] },
+  { type: "expandable", title: "sec_battery", icon: "mdi:battery-high", flatten: true, schema: [
+    { name: "battery_power", selector: { entity: { domain: S } } }, { name: "battery_soc", selector: { entity: { domain: S } } },
+    { name: "battery_invert", selector: { boolean: {} } },
   ] },
   { type: "expandable", title: "sec_labels", icon: "mdi:label-outline", flatten: true, schema: [
     { name: "solar_label", selector: { entity: {} } }, { name: "home_label", selector: { entity: {} } }, { name: "grid_label", selector: { entity: {} } },
@@ -872,7 +954,7 @@ const localize = (sc, l) => sc.map((x) => { const o = { ...x }; if (o.title) o.t
   if (o.selector?.select && o.name !== "language") o.selector = { select: { ...o.selector.select, options: o.selector.select.options.map((op) => ({ ...op, label: tr(l, op.label) })) } };
   if (o.name === "language") o.selector = { select: { ...o.selector.select, options: o.selector.select.options.map((op) => (op.value ? op : { ...op, label: tr(l, "auto") })) } };
   return o; });
-const DEFAULTS = { tariff_display: "color", show_countdown: true, show_totals: true, threshold: 20, curve_factor: 1, show_devices: true, max_devices: 10, device_threshold: 15, show_device_names: false, show_frame: true };
+const DEFAULTS = { tariff_display: "color", show_countdown: true, show_totals: true, threshold: 20, curve_factor: 1, show_devices: true, max_devices: 10, device_threshold: 15, show_device_names: false, show_frame: true, battery_invert: false };
 class HolmPowerFlowCardEditor extends HTMLElement {
   setConfig(c) { const j = JSON.stringify(c); this._config = JSON.parse(j); if (j === this._last && this._f) return; this._build(); }
   set hass(h) { this._hass = h; if (!this._f) this._build(); else this._f.hass = h; }
