@@ -17,6 +17,7 @@ HOLM Power Flow Card shows the **real-time power flow** between your solar panel
 - ☀️ → 🏠 ⇄ 🗼 **Three nodes, one line**: solar production, house consumption, grid import or export.
 - 🟠 **Animated dots** whose speed follows the power (in steps, to stay smooth).
 - 🍩 **Solar ring** around the house: the share of your consumption covered by the sun (“60% solar”).
+- 🔋 **Battery** (optional): a fourth node between solar and home, with its power, state of charge and flows; the home ring then shows its share, and the home shows how **self-powered** it is.
 - ↑ **Export**: measured if you have a sensor, otherwise **estimated** from the exported energy (marked with ≈).
 - 💶 **Off-peak / peak hours**: current period and kWh price, as a colour or spelled out, plus a **countdown** to the next change. With [HOLM HP/HC](https://github.com/kaaribou/holm-tarif), it's automatic.
 - 🔌 **Active devices**: the Energy dashboard devices currently drawing power, sorted by power, with an automatically chosen icon (washing machine, oven, water heater, TV, air conditioning…).
@@ -35,10 +36,14 @@ HOLM Power Flow Card shows the **real-time power flow** between your solar panel
 
 ### 🆕 What's new in 1.4.0
 
-- 🔋 **Battery state and power**: display of the charge state and power of the batteries.
-- 🔋 **Energy flow**: visualization of the energy flow to and from the batteries.
-- 🔋 **Battery sensors**: configuration in the card editor.
-- 🔋 **Battery history**: energy stored and used by the batteries.
+- 🔋 **The battery joins the flow** ([#4](https://github.com/kaaribou/holm-power-flow-card/issues/4), thanks to [@monvoisinjeanlouis-hash](https://github.com/monvoisinjeanlouis-hash) for [PR #5](https://github.com/kaaribou/holm-power-flow-card/pull/5)): a **Battery** node between solar and home, with its power, state of charge and today's totals. See [The battery](#the-battery).
+- 🏠 With a battery, the home shows how **self-powered** it is ("75% self-powered": share covered by solar and battery) and the ring shows the battery's share.
+- 📈 Battery chart on tap: charge and discharge, peaks and today's energy.
+- Without a battery, the card doesn't change.
+
+| Daytime: solar charging and export | Evening: discharge and import | Night: charging from the grid |
+|---|---|---|
+| ![Solar charging](docs/images/batterie-jour.png) | ![Discharge](docs/images/batterie-soir.png) | ![Grid charging](docs/images/batterie-nuit.png) |
 
 ### 🆕 What's new in 1.3.0
 
@@ -114,6 +119,26 @@ type: custom:holm-power-flow-card
 | Export | `export_power` if you have it, otherwise estimated from the energy exported over the last 10 minutes |
 | Home | `home_power` if you have it, otherwise **solar + import − export** |
 | Solar share | (solar − export) ÷ home |
+| Battery | `battery_power` (or Energy dashboard): positive = discharging, negative = charging; home becomes **solar + discharge + import − export − charge** |
+| Self-powered (with battery) | (solar used + discharge to the home) ÷ home |
+
+### The battery
+
+It appears as soon as a **battery power sensor** is found in the Energy dashboard or set in the editor (**Battery** section). Without a battery, the card keeps its three nodes.
+
+![The battery in the flow](docs/images/batterie-soir.png)
+
+- **Its place**: between solar and home, on the same line. Solar power going straight to the home **passes under the battery** (its dots disappear under the icon and come out the other side), like in a hybrid inverter.
+- **The dots**:
+  - gold from solar to the battery: it is **charging from the sun**;
+  - pink from the battery to the home: it is **discharging** and powering the home;
+  - blue (grid colour) from the home to the battery: it is **charging from the grid** (off-peak hours…).
+- **The icon** follows the state of charge (empty, 10%… full) and shows a bolt while charging; it **pulses** gently while the battery is working and fades when idle.
+- **The value**: the power with **↑ when charging** (energy goes into it) and **↓ when discharging** (it supplies), like the grid.
+- **Below**: the **state of charge** in % (`battery_soc` option), then today's totals **↓ discharged ↑ charged** in kWh (with an Energy dashboard).
+- **The home ring**: gold for the solar share, **pink for the battery share**, grid colour for the rest. The subtitle becomes "**xx% self-powered**" (solar + battery).
+- **A tap** opens the battery chart: charge and discharge power, peaks and energy charged / discharged over the period.
+- **The sign**: if your sensor is positive when charging, tick **Invert sign** (`battery_invert`).
 
 ---
 
@@ -124,7 +149,10 @@ type: custom:holm-power-flow-card
 | `title` | Title above the flow | — |
 | `language` | Card language: `fr`, `en`, `de`, `es`, `it`, `nl`, `pt`, `pl` | the profile's |
 | `show_frame` | Show the card frame | `true` |
-| `show_totals` | Today's totals under the nodes (imported / exported, produced, consumed) | `true` |
+| `show_totals` | Today's totals under the nodes (imported / exported, produced, consumed, discharged / charged) | `true` |
+| `battery_power` | Battery power (W or kW): positive = discharging, negative = charging | Energy dashboard |
+| `battery_soc` | Battery state of charge (%) | — |
+| `battery_invert` | Invert the sign of `battery_power` (positive = charging) | `false` |
 | `threshold` | Below this threshold (W), a link is considered inactive | `20` |
 | `curve_factor` | Link curvature (0 = straight) | `1` |
 | `solar_power` / `grid_power` | Power sensors (W or kW) | Energy dashboard |
@@ -140,7 +168,7 @@ type: custom:holm-power-flow-card
 | `show_device_names` | Show their names | `false` |
 | `max_devices` / `device_threshold` | Max number of devices / minimum power (W) | `10` / `15` |
 | `devices` | List of devices instead of the Energy dashboard ones (`entity`, `name`, `icon`, `color`) | Energy dashboard |
-| `solar_color` / `home_color` / `grid_color` / `grid_hp_color` / `export_color` | Colours | gold / turquoise / blue / orange / purple |
+| `solar_color` / `home_color` / `grid_color` / `grid_hp_color` / `export_color` / `battery_color` | Colours | gold / turquoise / blue / orange / purple / pink |
 
 ### Off-peak / peak hours
 

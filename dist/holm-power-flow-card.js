@@ -24,7 +24,7 @@ const I18N = {
     current: "Actuel", buy_peak: "Pic d'achat", sell_peak: "Pic de revente", bought: "Acheté", sold: "Revendu", grid_buy: "Achat au réseau", resale: "Revente",
     min: "Min", max: "Max", average: "Moyenne", energy: "Énergie", avg_suffix: " (moyenne)",
     device_power: "Puissance de l'appareil", solar: "Solaire", production: "Production", grid: "Réseau", buy_sell: "Achat et revente", home: "Maison",
-    in_dur: "{p} dans {d}", hc: "HC", hp: "HP", hc_long: "Heures creuses", hp_long: "Heures pleines", kwh_today: "{x} kWh auj.", pct_solar: "{x} % solaire",
+    in_dur: "{p} dans {d}", hc: "HC", hp: "HP", hc_long: "Heures creuses", hp_long: "Heures pleines", kwh_today: "{x} kWh auj.", pct_solar: "{x} % solaire", pct_auto: "{x} % autonome",
     battery: "Batterie", battery_sub: "Charge et décharge", bat_dis: "Décharge", bat_chg: "Charge", bat_dis_peak: "Pic de décharge", bat_chg_peak: "Pic de charge",
     sec_battery: "Batterie", l_battery_power: "Puissance batterie (vide = tableau Énergie ; + = décharge)", l_battery_soc: "Niveau de charge (%)",
     l_battery_invert: "Inverser le signe (+ = charge)", l_battery_color: "Couleur batterie",
@@ -45,7 +45,7 @@ const I18N = {
     current: "Now", buy_peak: "Import peak", sell_peak: "Export peak", bought: "Imported", sold: "Exported", grid_buy: "Grid import", resale: "Export",
     min: "Min", max: "Max", average: "Average", energy: "Energy", avg_suffix: " (average)",
     device_power: "Device power", solar: "Solar", production: "Production", grid: "Grid", buy_sell: "Import and export", home: "Home",
-    in_dur: "{p} in {d}", hc: "Off-peak", hp: "Peak", hc_long: "Off-peak hours", hp_long: "Peak hours", kwh_today: "{x} kWh today", pct_solar: "{x}% solar",
+    in_dur: "{p} in {d}", hc: "Off-peak", hp: "Peak", hc_long: "Off-peak hours", hp_long: "Peak hours", kwh_today: "{x} kWh today", pct_solar: "{x}% solar", pct_auto: "{x}% self-powered",
     battery: "Battery", battery_sub: "Charge and discharge", bat_dis: "Discharge", bat_chg: "Charge", bat_dis_peak: "Discharge peak", bat_chg_peak: "Charge peak",
     sec_battery: "Battery", l_battery_power: "Battery power (empty = Energy dashboard; + = discharge)", l_battery_soc: "State of charge (%)",
     l_battery_invert: "Invert sign (+ = charging)", l_battery_color: "Battery colour",
@@ -66,7 +66,7 @@ const I18N = {
     current: "Aktuell", buy_peak: "Bezugsspitze", sell_peak: "Einspeisespitze", bought: "Bezogen", sold: "Eingespeist", grid_buy: "Netzbezug", resale: "Einspeisung",
     min: "Min", max: "Max", average: "Durchschnitt", energy: "Energie", avg_suffix: " (Durchschnitt)",
     device_power: "Geräteleistung", solar: "Solar", production: "Erzeugung", grid: "Netz", buy_sell: "Bezug und Einspeisung", home: "Haus",
-    in_dur: "{p} in {d}", hc: "NT", hp: "HT", hc_long: "Niedertarif", hp_long: "Hochtarif", kwh_today: "{x} kWh heute", pct_solar: "{x} % Solar",
+    in_dur: "{p} in {d}", hc: "NT", hp: "HT", hc_long: "Niedertarif", hp_long: "Hochtarif", kwh_today: "{x} kWh heute", pct_solar: "{x} % Solar", pct_auto: "{x} % autark",
     battery: "Batterie", battery_sub: "Laden und Entladen", bat_dis: "Entladung", bat_chg: "Ladung", bat_dis_peak: "Entladespitze", bat_chg_peak: "Ladespitze",
     sec_battery: "Batterie", l_battery_power: "Batterieleistung (leer = Energie-Dashboard; + = Entladung)", l_battery_soc: "Ladestand (%)",
     l_battery_invert: "Vorzeichen umkehren (+ = Laden)", l_battery_color: "Farbe Batterie",
@@ -87,7 +87,7 @@ const I18N = {
     current: "Actual", buy_peak: "Pico de compra", sell_peak: "Pico de venta", bought: "Comprado", sold: "Vendido", grid_buy: "Compra a la red", resale: "Venta",
     min: "Mín", max: "Máx", average: "Media", energy: "Energía", avg_suffix: " (media)",
     device_power: "Potencia del dispositivo", solar: "Solar", production: "Producción", grid: "Red", buy_sell: "Compra y venta", home: "Casa",
-    in_dur: "{p} en {d}", hc: "Valle", hp: "Punta", hc_long: "Horas valle", hp_long: "Horas punta", kwh_today: "{x} kWh hoy", pct_solar: "{x} % solar",
+    in_dur: "{p} en {d}", hc: "Valle", hp: "Punta", hc_long: "Horas valle", hp_long: "Horas punta", kwh_today: "{x} kWh hoy", pct_solar: "{x} % solar", pct_auto: "{x} % autónomo",
     battery: "Batería", battery_sub: "Carga y descarga", bat_dis: "Descarga", bat_chg: "Carga", bat_dis_peak: "Pico de descarga", bat_chg_peak: "Pico de carga",
     sec_battery: "Batería", l_battery_power: "Potencia de la batería (vacío = panel de Energía; + = descarga)", l_battery_soc: "Nivel de carga (%)",
     l_battery_invert: "Invertir el signo (+ = carga)", l_battery_color: "Color batería",
@@ -108,7 +108,7 @@ const I18N = {
     current: "Attuale", buy_peak: "Picco di prelievo", sell_peak: "Picco di immissione", bought: "Prelevato", sold: "Immesso", grid_buy: "Prelievo dalla rete", resale: "Immissione",
     min: "Min", max: "Max", average: "Media", energy: "Energia", avg_suffix: " (media)",
     device_power: "Potenza del dispositivo", solar: "Solare", production: "Produzione", grid: "Rete", buy_sell: "Prelievo e immissione", home: "Casa",
-    in_dur: "{p} tra {d}", hc: "F. punta", hp: "Punta", hc_long: "Fuori punta", hp_long: "Ore di punta", kwh_today: "{x} kWh oggi", pct_solar: "{x}% solare",
+    in_dur: "{p} tra {d}", hc: "F. punta", hp: "Punta", hc_long: "Fuori punta", hp_long: "Ore di punta", kwh_today: "{x} kWh oggi", pct_solar: "{x}% solare", pct_auto: "{x}% autonomo",
     battery: "Batteria", battery_sub: "Carica e scarica", bat_dis: "Scarica", bat_chg: "Carica", bat_dis_peak: "Picco di scarica", bat_chg_peak: "Picco di carica",
     sec_battery: "Batteria", l_battery_power: "Potenza batteria (vuoto = dashboard Energia; + = scarica)", l_battery_soc: "Livello di carica (%)",
     l_battery_invert: "Inverti il segno (+ = carica)", l_battery_color: "Colore batteria",
@@ -129,7 +129,7 @@ const I18N = {
     current: "Nu", buy_peak: "Afnamepiek", sell_peak: "Teruglevering-piek", bought: "Afgenomen", sold: "Teruggeleverd", grid_buy: "Afname van het net", resale: "Teruglevering",
     min: "Min", max: "Max", average: "Gemiddeld", energy: "Energie", avg_suffix: " (gemiddeld)",
     device_power: "Vermogen van het apparaat", solar: "Zon", production: "Opwekking", grid: "Net", buy_sell: "Afname en teruglevering", home: "Huis",
-    in_dur: "{p} over {d}", hc: "Dal", hp: "Piek", hc_long: "Daltarief", hp_long: "Piektarief", kwh_today: "{x} kWh vandaag", pct_solar: "{x}% zon",
+    in_dur: "{p} over {d}", hc: "Dal", hp: "Piek", hc_long: "Daltarief", hp_long: "Piektarief", kwh_today: "{x} kWh vandaag", pct_solar: "{x}% zon", pct_auto: "{x}% zelfvoorzienend",
     battery: "Batterij", battery_sub: "Laden en ontladen", bat_dis: "Ontladen", bat_chg: "Laden", bat_dis_peak: "Ontlaadpiek", bat_chg_peak: "Laadpiek",
     sec_battery: "Batterij", l_battery_power: "Batterijvermogen (leeg = Energiedashboard; + = ontladen)", l_battery_soc: "Laadniveau (%)",
     l_battery_invert: "Teken omkeren (+ = laden)", l_battery_color: "Kleur batterij",
@@ -150,7 +150,7 @@ const I18N = {
     current: "Atual", buy_peak: "Pico de compra", sell_peak: "Pico de venda", bought: "Comprado", sold: "Vendido", grid_buy: "Compra à rede", resale: "Venda",
     min: "Mín", max: "Máx", average: "Média", energy: "Energia", avg_suffix: " (média)",
     device_power: "Potência do dispositivo", solar: "Solar", production: "Produção", grid: "Rede", buy_sell: "Compra e venda", home: "Casa",
-    in_dur: "{p} em {d}", hc: "Vazio", hp: "Cheias", hc_long: "Horas de vazio", hp_long: "Horas cheias", kwh_today: "{x} kWh hoje", pct_solar: "{x}% solar",
+    in_dur: "{p} em {d}", hc: "Vazio", hp: "Cheias", hc_long: "Horas de vazio", hp_long: "Horas cheias", kwh_today: "{x} kWh hoje", pct_solar: "{x}% solar", pct_auto: "{x}% autónomo",
     battery: "Bateria", battery_sub: "Carga e descarga", bat_dis: "Descarga", bat_chg: "Carga", bat_dis_peak: "Pico de descarga", bat_chg_peak: "Pico de carga",
     sec_battery: "Bateria", l_battery_power: "Potência da bateria (vazio = painel Energia; + = descarga)", l_battery_soc: "Nível de carga (%)",
     l_battery_invert: "Inverter o sinal (+ = carga)", l_battery_color: "Cor da bateria",
@@ -171,7 +171,7 @@ const I18N = {
     current: "Teraz", buy_peak: "Szczyt poboru", sell_peak: "Szczyt oddawania", bought: "Pobrano", sold: "Oddano", grid_buy: "Pobór z sieci", resale: "Oddawanie",
     min: "Min", max: "Maks", average: "Średnia", energy: "Energia", avg_suffix: " (średnia)",
     device_power: "Moc urządzenia", solar: "PV", production: "Produkcja", grid: "Sieć", buy_sell: "Pobór i oddawanie", home: "Dom",
-    in_dur: "{p} za {d}", hc: "Poza szczytem", hp: "Szczyt", hc_long: "Strefa pozaszczytowa", hp_long: "Strefa szczytowa", kwh_today: "{x} kWh dziś", pct_solar: "{x}% PV",
+    in_dur: "{p} za {d}", hc: "Poza szczytem", hp: "Szczyt", hc_long: "Strefa pozaszczytowa", hp_long: "Strefa szczytowa", kwh_today: "{x} kWh dziś", pct_solar: "{x}% PV", pct_auto: "{x}% autonomii",
     battery: "Bateria", battery_sub: "Ładowanie i rozładowanie", bat_dis: "Rozładowanie", bat_chg: "Ładowanie", bat_dis_peak: "Szczyt rozładowania", bat_chg_peak: "Szczyt ładowania",
     sec_battery: "Bateria", l_battery_power: "Moc baterii (puste = panel Energia; + = rozładowanie)", l_battery_soc: "Poziom naładowania (%)",
     l_battery_invert: "Odwróć znak (+ = ładowanie)", l_battery_color: "Kolor baterii",
@@ -202,7 +202,7 @@ const setLoc = (hass, c) => { const l = langOf(hass, c); const p = hass?.locale?
 //   energy: [statistic_id…] (kWh, ajoutés),  energyNeg: [statistic_id…] (soustraits),  energyOut: [statistic_id…] (revente, réseau)
 //   price: €/kWh (estimation du coût, mode énergie), outColor, defaultRange, bat: true (libellés charge / décharge)
 // })
-if (!customElements.get("holm-energy-chart-v1b")) {
+if (!customElements.get("holm-energy-chart-v1c")) {
   const frc = (v, d = 1) => Number(v).toLocaleString(NUMLOC, { minimumFractionDigits: d, maximumFractionDigits: d });
   const escc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fW = (w) => (Math.abs(w) >= 1000 ? `${frc(w / 1000, Math.abs(w) >= 10000 ? 1 : 2)} kW` : `${frc(w, 0)} W`);
@@ -530,18 +530,18 @@ if (!customElements.get("holm-energy-chart-v1b")) {
       @media (max-width:480px) { .bg { padding:8px; align-items:flex-end; } .dlg { border-radius:22px 22px 14px 14px; padding:12px; } }`;
     }
   }
-  customElements.define("holm-energy-chart-v1b", HolmEnergyChart);
+  customElements.define("holm-energy-chart-v1c", HolmEnergyChart);
 }
 const openEnergyChart = (hass, o) => {
-  let dlg = document.querySelector("holm-energy-chart-v1b");
-  if (!dlg) { dlg = document.createElement("holm-energy-chart-v1b"); document.body.appendChild(dlg); }
+  let dlg = document.querySelector("holm-energy-chart-v1c");
+  if (!dlg) { dlg = document.createElement("holm-energy-chart-v1c"); document.body.appendChild(dlg); }
   dlg.open(hass, o);
 };
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fr = (v, d = 1) => Number(v).toLocaleString(NUMLOC, { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtW = (w) => (Math.abs(w) >= 1000 ? [fr(w / 1000, Math.abs(w) >= 10000 ? 1 : 2), "kW"] : [fr(w, 0), "W"]);
-const DEF = { solar_color: "#e3a21a", home_color: "#0abfbf", grid_color: "#4a90d9", grid_hp_color: "#e2702a", export_color: "#9b6fd6", battery_color: "#3fb97a" };
+const DEF = { solar_color: "#e3a21a", home_color: "#0abfbf", grid_color: "#4a90d9", grid_hp_color: "#e2702a", export_color: "#9b6fd6", battery_color: "#e5609a" };
 const ICONS = [
   [/chauffe.?eau|ballon|water.?heater|boiler/i, "mdi:water-boiler"], [/clim|air.?con/i, "mdi:snowflake"], [/chauffage|radiateur|heater|heating/i, "mdi:radiator"],
   [/s[eè]che.?serviette/i, "mdi:heating-coil"], [/volet/i, "mdi:window-shutter"], [/frigo|r[ée]frig|fridge/i, "mdi:fridge-outline"],
@@ -732,7 +732,7 @@ class HolmPowerFlowCard extends HTMLElement {
   _build() {
     if (!this.shadowRoot || !this._c || !this._src) return;
     const hasBat = !!this._ent("bat"); this._hasBat = hasBat;
-    const top = hasBat ? 16 : 0; // place pour l'arc solaire → maison au-dessus de la batterie
+    const top = 0;
     const c = this._c, W = Math.max(260, (this._w || this.clientWidth || 400) - 24),
       H = (c.show_totals !== false ? 112 : 96) + (c.show_countdown !== false && (this._ent("tariff") || (this._hass && this._hcEnt())) ? 13 : 0) + top, cy = 30 + top, r = 22;
     const xs = Math.round(W * (hasBat ? 0.12 : 0.14)), xb = Math.round(W * 0.37), xh = Math.round(W * (hasBat ? 0.63 : 0.5)), xg = Math.round(W * (hasBat ? 0.88 : 0.86));
@@ -741,9 +741,11 @@ class HolmPowerFlowCard extends HTMLElement {
     const sag = 10 * cf;
     const cv = (a, b) => `M${a},${cy} C${a + (b - a) * 0.35},${cy + sag} ${b - (b - a) * 0.35},${cy + sag} ${b},${cy}`;
     // chemins : solaire → maison (direct ou arc), solaire → batterie, batterie → maison, réseau → maison (import), maison → réseau (export)
-    const pSH = hasBat ? `M${xs},${cy - r - 2} C${xs},${cy - r - 18} ${xh},${cy - r - 18} ${xh},${cy - r - 2}`
+    // avec batterie, elle est sur le chemin solaire → maison : le solaire direct passe « derrière » elle (points masqués sous son icône)
+    const cvc = (a, b) => ` C${a + (b - a) * 0.35},${cy + sag} ${b - (b - a) * 0.35},${cy + sag} ${b},${cy}`;
+    const pSB = `M${xs + r + 4},${cy}` + cvc(xs + r + 4, xb), pBH = `M${xb},${cy}` + cvc(xb, xh - r - 4), pHB = `M${xh - r - 4},${cy}` + cvc(xh - r - 4, xb);
+    const pSH = hasBat ? pSB + cvc(xb, xh - r - 4)
       : `M${xs + r + 4},${cy} C${xs + r + 4 + (xh - xs) * 0.35},${cy + sag} ${xh - r - 4 - (xh - xs) * 0.35},${cy + sag} ${xh - r - 4},${cy}`;
-    const pSB = cv(xs + r + 4, xb - r - 4), pBH = cv(xb + r + 4, xh - r - 4), pHB = cv(xh - r - 4, xb + r + 4);
     const pGH = `M${xg - r - 4},${cy} C${xg - r - 4 - (xg - xh) * 0.35},${cy + sag} ${xh + r + 4 + (xg - xh) * 0.35},${cy + sag} ${xh + r + 4},${cy}`;
     const pHG = `M${xh + r + 4},${cy} C${xh + r + 4 + (xg - xh) * 0.35},${cy + sag} ${xg - r - 4 - (xg - xh) * 0.35},${cy + sag} ${xg - r - 4},${cy}`;
     const dots = (cls, path, color) => [0, 1, 2].map((i) => `<circle r="3" class="dot ${cls}" style="offset-path:path('${path}');fill:${color};--i:${i}"/>`).join("");
@@ -758,6 +760,7 @@ class HolmPowerFlowCard extends HTMLElement {
       svg { position:absolute; inset:0; overflow:visible; }
       .ln { fill:none; stroke-width:2; stroke-linecap:round; opacity:.18; transition:opacity .6s, stroke .6s; }
       .ln.on { opacity:.55; }
+      .mask { fill:var(--ha-card-background, var(--card-background-color, #fff)); }
       .dot { opacity:0; offset-rotate:0deg; filter:drop-shadow(0 0 4px currentColor); }
       .dot.run { opacity:1; animation:mv var(--d) linear infinite; animation-delay:calc(var(--d) * var(--i) / -3); }
       @keyframes mv { from { offset-distance:0%; } to { offset-distance:100%; } }
@@ -783,6 +786,7 @@ class HolmPowerFlowCard extends HTMLElement {
       .node.bat .k .in { color:${col.b}; } .node.bat .k .out { color:${col.s}; }
       .k:empty { display:none; }
       .node.grid { width:${Math.min(144, Math.round(W * (hasBat ? 0.24 : 0.29)))}px; }
+      ${hasBat ? `.node.home { width:${Math.min(130, Math.round(W * 0.29))}px; }` : ""}
       .cd { font-size:10.5px; font-weight:600; white-space:nowrap; line-height:1.3; font-variant-numeric:tabular-nums; color:color-mix(in srgb, var(--cdc, var(--secondary-text-color)) 85%, var(--primary-text-color)); }
       .cd:empty { display:none; }
       .s { font-size:11px; color:var(--secondary-text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; line-height:1.3; }
@@ -802,7 +806,7 @@ class HolmPowerFlowCard extends HTMLElement {
           <path id="lSH" class="ln" d="${pSH}" stroke="${col.s}"/><path id="lGH" class="ln" d="${pGH}"/>
           ${hasBat ? `<path id="lSB" class="ln" d="${pSB}" stroke="${col.s}"/><path id="lBH" class="ln" d="${pBH}" stroke="${col.b}"/>` : ""}
           ${dots("dSH", pSH, col.s)}${dots("dGH", pGH, "var(--gc)")}${dots("dHG", pHG, col.e)}
-          ${hasBat ? dots("dSB", pSB, col.s) + dots("dBH", pBH, col.b) + dots("dHB", pHB, "var(--gc)") : ""}
+          ${hasBat ? dots("dSB", pSB, col.s) + dots("dBH", pBH, col.b) + dots("dHB", pHB, "var(--gc)") + `<circle cx="${xb}" cy="${cy}" r="${r + 3}" class="mask"/>` : ""}
         </svg>
         <div class="node solar" data-e="solar" style="left:${xs}px;--c:${col.s}"><div class="ic"><ha-icon icon="mdi:solar-power-variant"></ha-icon></div><div class="v" id="vS"></div><div class="s" id="sS"></div><div class="k" id="kS"></div></div>
         ${hasBat ? `<div class="node bat" data-e="bat" style="left:${xb}px;--c:${col.b}"><div class="ic"><ha-icon icon="mdi:battery"></ha-icon></div><div class="v" id="vB"></div><div class="s" id="sB"></div><div class="k" id="kB"></div></div>` : ""}
@@ -846,7 +850,7 @@ class HolmPowerFlowCard extends HTMLElement {
     const se = e("solarE") ? this._n(e("solarE")) : NaN;
     set("sS", this._label("solar_label", isNaN(se) || (c.show_totals !== false && this._tot && !isNaN(this._tot.sol)) ? this._t("solar") : this._t("kwh_today", { x: fr(se, 1) })));
     set("vH", w(v.home));
-    set("sH", this._label("home_label", v.home > 0 ? this._t("pct_solar", { x: fr(v.share * 100, 0) }) : this._t("home")));
+    set("sH", this._label("home_label", v.home > 0 ? (this._hasBat ? this._t("pct_auto", { x: fr(Math.min(1, v.share + v.shareB) * 100, 0) }) : this._t("pct_solar", { x: fr(v.share * 100, 0) })) : this._t("home")));
     if (v.exp > v.th) set("vG", w(v.exp, `<span class="ar">↑</span>${v.est ? "≈" : ""}`));
     else set("vG", w(v.imp, v.imp > v.th ? `<span class="ar">↓</span>` : ""));
     const T0 = this._tar, tv = T0 ? T0.price : NaN, long = c.tariff_display === "label" || c.tariff_display === "both";

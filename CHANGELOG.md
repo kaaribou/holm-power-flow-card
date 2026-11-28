@@ -1,10 +1,12 @@
 # Changelog
 
 ## 1.4.0
-- 🔋 Affichage de l'état de charge et de la puissance des batteries
-- 🔋 Visualisation du flux d'énergie vers et depuis les batteries
-- 🔋 Configuration des capteurs de batterie dans l'éditeur de la carte
-- 🔋 Historique de l'énergie stockée et utilisée par les batteries
+- **Batterie** ([#4](https://github.com/kaaribou/holm-power-flow-card/issues/4), contribution de @monvoisinjeanlouis-hash, [PR #5](https://github.com/kaaribou/holm-power-flow-card/pull/5)) : nœud **Batterie** entre le solaire et la maison, affiché dès qu'un capteur de puissance batterie est trouvé dans le tableau Énergie ou indiqué (`battery_power`, `battery_soc`, `battery_invert`, `battery_color`, rubrique « Batterie » de l'éditeur).
+  - Flux : charge au soleil, décharge vers la maison, charge depuis le réseau ; le solaire direct passe sous la batterie (pas d'arc, hauteur de carte inchangée).
+  - Icône selon le niveau de charge, pulsation en charge / décharge, totaux du jour déchargé / chargé, graphique au toucher (charge / décharge).
+  - Maison : calcul avec la batterie, part de la batterie dans l'anneau, sous-titre « xx % autonome ».
+- Composant graphique renommé `holm-energy-chart-v1c` (évite un conflit avec une version en cache).
+- Sans batterie, la carte est inchangée. Traductions dans les 8 langues.
 
 ## 1.3.0
 - **8 langues** : français, anglais, allemand, espagnol, italien, néerlandais, portugais et polonais, pour la carte, ses graphiques et l'éditeur visuel. La carte suit la langue du profil Home Assistant (anglais si la langue n'est pas traduite) ; nouvelle option `language`, aussi réglable dans l'éditeur. Les nombres et les dates suivent la langue.

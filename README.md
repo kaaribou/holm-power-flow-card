@@ -17,7 +17,7 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 - ☀️ → 🏠 ⇄ 🗼 **Trois nœuds, une ligne** : production solaire, consommation de la maison, achat ou revente sur le réseau.
 - 🟠 **Points animés** dont la vitesse suit la puissance (par paliers, pour rester fluide).
 - 🍩 **Anneau solaire** autour de la maison : la part de votre consommation couverte par le soleil (« 60 % solaire »).
-- 🔋 **Batteries** : état de charge et puissance des batteries, flux d'énergie vers et depuis les batteries, historique de l'énergie stockée et utilisée.
+- 🔋 **Batterie** (facultative) : un quatrième nœud entre le solaire et la maison, avec sa puissance, son niveau de charge et ses flux ; l'anneau de la maison montre alors sa part, et la maison affiche son **autonomie**.
 - ↑ **Revente** : mesurée si vous avez un capteur, sinon **estimée** à partir de l'énergie revendue (signalée par ≈).
 - 💶 **Heures creuses / pleines** : période et prix du kWh en cours, en couleur ou en toutes lettres, et le **décompte** jusqu'au prochain changement. Avec [HOLM HP/HC](https://github.com/kaaribou/holm-tarif), c'est automatique.
 - 🔌 **Appareils actifs** : les appareils du tableau Énergie qui consomment, triés par puissance, avec une icône choisie automatiquement (lave-linge, four, chauffe-eau, TV, clim…).
@@ -33,10 +33,14 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 
 ### 🆕 Nouveautés de la 1.4.0
 
-- 🔋 Affichage de l'état de charge et de la puissance des batteries
-- 🔋 Visualisation du flux d'énergie vers et depuis les batteries
-- 🔋 Configuration des capteurs de batterie dans l'éditeur de la carte
-- 🔋 Historique de l'énergie stockée et utilisée par les batteries
+- 🔋 **La batterie entre dans le flux** ([#4](https://github.com/kaaribou/holm-power-flow-card/issues/4), merci à [@monvoisinjeanlouis-hash](https://github.com/monvoisinjeanlouis-hash) pour la [PR #5](https://github.com/kaaribou/holm-power-flow-card/pull/5)) : un nœud **Batterie** entre le solaire et la maison, avec sa puissance, son niveau de charge et ses totaux du jour. Voir [La batterie](#la-batterie).
+- 🏠 Avec une batterie, la maison affiche son **autonomie** (« 75 % autonome » : part couverte par le solaire et la batterie) et l'anneau montre la part de la batterie.
+- 📈 Graphique de la batterie au toucher : charge et décharge, pics et énergie du jour.
+- Sans batterie, la carte ne change pas.
+
+| En journée : charge au soleil et revente | Le soir : décharge et achat | La nuit : charge sur le réseau |
+|---|---|---|
+| ![Charge solaire](docs/images/batterie-jour.png) | ![Décharge](docs/images/batterie-soir.png) | ![Charge réseau](docs/images/batterie-nuit.png) |
 
 ### 🆕 Nouveautés de la 1.3.0
 
@@ -112,6 +116,26 @@ type: custom:holm-power-flow-card
 | Revente | `export_power` si vous l'avez, sinon estimée à partir de l'énergie revendue des 10 dernières minutes |
 | Maison | `home_power` si vous l'avez, sinon **solaire + achat − revente** |
 | Part solaire | (solaire − revente) ÷ maison |
+| Batterie | `battery_power` (ou tableau Énergie) : positif = décharge, négatif = charge ; la maison devient **solaire + décharge + achat − revente − charge** |
+| Autonomie (avec batterie) | (solaire consommé + décharge vers la maison) ÷ maison |
+
+### La batterie
+
+Elle apparaît dès qu'un **capteur de puissance batterie** est trouvé dans le tableau Énergie ou indiqué dans l'éditeur (rubrique **Batterie**). Sans batterie, la carte reste à trois nœuds.
+
+![La batterie dans le flux](docs/images/batterie-soir.png)
+
+- **Sa place** : entre le solaire et la maison, sur la même ligne. Le solaire qui alimente directement la maison **passe sous la batterie** (ses points disparaissent sous l'icône puis réapparaissent), comme dans un onduleur hybride.
+- **Les points** :
+  - orange du solaire vers la batterie : elle **se charge au soleil** ;
+  - roses de la batterie vers la maison : elle **se décharge** et alimente la maison ;
+  - bleus (couleur du réseau) de la maison vers la batterie : elle **se charge sur le réseau** (heures creuses…).
+- **L'icône** suit le niveau de charge (vide, 10 %… pleine) et affiche un éclair pendant la charge ; elle **pulse** doucement quand la batterie travaille et s'estompe au repos.
+- **La valeur** : la puissance avec **↑ quand elle se charge** (l'énergie va vers elle) et **↓ quand elle se décharge** (elle fournit), comme pour le réseau.
+- **En dessous** : le **niveau de charge** en % (option `battery_soc`), puis les totaux du jour **↓ déchargés ↑ chargés** en kWh (avec un tableau Énergie).
+- **L'anneau de la maison** : or pour la part solaire, **rose pour la part batterie**, couleur du réseau pour le reste. Le sous-titre devient « **xx % autonome** » (solaire + batterie).
+- **Un toucher** ouvre le graphique de la batterie : puissance de charge et de décharge, pics et énergie chargée / déchargée sur la période.
+- **Le signe** : si votre capteur est positif en charge, cochez **Inverser le signe** (`battery_invert`).
 
 ---
 
@@ -122,7 +146,10 @@ type: custom:holm-power-flow-card
 | `title` | Titre au-dessus du flux | — |
 | `language` | Langue de la carte : `fr`, `en`, `de`, `es`, `it`, `nl`, `pt`, `pl` | celle du profil |
 | `show_frame` | Afficher le cadre de la carte | `true` |
-| `show_totals` | Totaux du jour sous les nœuds (acheté / revendu, produit, consommé) | `true` |
+| `show_totals` | Totaux du jour sous les nœuds (acheté / revendu, produit, consommé, déchargé / chargé) | `true` |
+| `battery_power` | Puissance de la batterie (W ou kW) : positif = décharge, négatif = charge | tableau Énergie |
+| `battery_soc` | Niveau de charge de la batterie (%) | — |
+| `battery_invert` | Inverser le signe de `battery_power` (positif = charge) | `false` |
 | `threshold` | En dessous de ce seuil (W), une liaison est considérée inactive | `20` |
 | `curve_factor` | Courbure des liaisons (0 = droites) | `1` |
 | `solar_power` / `grid_power` | Capteurs de puissance (W ou kW) | tableau Énergie |
@@ -138,7 +165,7 @@ type: custom:holm-power-flow-card
 | `show_device_names` | Afficher leur nom | `false` |
 | `max_devices` / `device_threshold` | Nombre maximum d'appareils / puissance minimale (W) | `10` / `15` |
 | `devices` | Liste d'appareils à la place de ceux du tableau Énergie (`entity`, `name`, `icon`, `color`) | tableau Énergie |
-| `solar_color` / `home_color` / `grid_color` / `grid_hp_color` / `export_color` | Couleurs | or / turquoise / bleu / orange / violet |
+| `solar_color` / `home_color` / `grid_color` / `grid_hp_color` / `export_color` / `battery_color` | Couleurs | or / turquoise / bleu / orange / violet / rose |
 
 ### Heures creuses / pleines
 
