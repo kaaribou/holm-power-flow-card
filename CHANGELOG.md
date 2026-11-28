@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+- 🔋 Affichage de l'état de charge et de la puissance des batteries
+- 🔋 Visualisation du flux d'énergie vers et depuis les batteries
+- 🔋 Configuration des capteurs de batterie dans l'éditeur de la carte
+- 🔋 Historique de l'énergie stockée et utilisée par les batteries
+
 ## 1.3.0
 - **8 langues** : français, anglais, allemand, espagnol, italien, néerlandais, portugais et polonais, pour la carte, ses graphiques et l'éditeur visuel. La carte suit la langue du profil Home Assistant (anglais si la langue n'est pas traduite) ; nouvelle option `language`, aussi réglable dans l'éditeur. Les nombres et les dates suivent la langue.
 - Icônes automatiques des appareils : reconnaissance des noms anglais en plus (water heater, washing machine, dishwasher, dryer, fridge, heater…).

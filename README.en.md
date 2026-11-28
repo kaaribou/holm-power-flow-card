@@ -33,6 +33,13 @@ HOLM Power Flow Card shows the **real-time power flow** between your solar panel
 
 ---
 
+### 🆕 What's new in 1.4.0
+
+- 🔋 **Battery state and power**: display of the charge state and power of the batteries.
+- 🔋 **Energy flow**: visualization of the energy flow to and from the batteries.
+- 🔋 **Battery sensors**: configuration in the card editor.
+- 🔋 **Battery history**: energy stored and used by the batteries.
+
 ### 🆕 What's new in 1.3.0
 
 - 🌍 **The card speaks 8 languages**: English, French, German, Spanish, Italian, Dutch, Portuguese and Polish, charts and editor included. It follows the language of your Home Assistant profile (English if your language isn't translated yet); the `language` option lets you force one. Numbers and dates follow the language too.

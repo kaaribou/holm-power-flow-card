@@ -17,6 +17,7 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 - ☀️ → 🏠 ⇄ 🗼 **Trois nœuds, une ligne** : production solaire, consommation de la maison, achat ou revente sur le réseau.
 - 🟠 **Points animés** dont la vitesse suit la puissance (par paliers, pour rester fluide).
 - 🍩 **Anneau solaire** autour de la maison : la part de votre consommation couverte par le soleil (« 60 % solaire »).
+- 🔋 **Batteries** : état de charge et puissance des batteries, flux d'énergie vers et depuis les batteries, historique de l'énergie stockée et utilisée.
 - ↑ **Revente** : mesurée si vous avez un capteur, sinon **estimée** à partir de l'énergie revendue (signalée par ≈).
 - 💶 **Heures creuses / pleines** : période et prix du kWh en cours, en couleur ou en toutes lettres, et le **décompte** jusqu'au prochain changement. Avec [HOLM HP/HC](https://github.com/kaaribou/holm-tarif), c'est automatique.
 - 🔌 **Appareils actifs** : les appareils du tableau Énergie qui consomment, triés par puissance, avec une icône choisie automatiquement (lave-linge, four, chauffe-eau, TV, clim…).
@@ -29,6 +30,13 @@ HOLM Power Flow Card affiche le **flux de puissance en temps réel** entre vos p
 | ![Soleil](docs/images/soleil.png) | ![Mixte](docs/images/mixte.png) | ![Soir](docs/images/soir.png) |
 
 ---
+
+### 🆕 Nouveautés de la 1.4.0
+
+- 🔋 Affichage de l'état de charge et de la puissance des batteries
+- 🔋 Visualisation du flux d'énergie vers et depuis les batteries
+- 🔋 Configuration des capteurs de batterie dans l'éditeur de la carte
+- 🔋 Historique de l'énergie stockée et utilisée par les batteries
 
 ### 🆕 Nouveautés de la 1.3.0
 
